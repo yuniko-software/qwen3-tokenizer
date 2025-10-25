@@ -399,3 +399,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Microsoft.ML.Tokenizers library source (temporary for analysis)
+dotnet/Microsoft.ML.Tokenizers/
