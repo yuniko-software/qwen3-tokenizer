@@ -1,16 +1,14 @@
 <Solution>
-  <Configurations>
-    <Platform Name="Any CPU" />
-    <Platform Name="x64" />
-    <Platform Name="x86" />
-  </Configurations>
+  <Folder Name="/samples/">
+    <Project Path="samples/Yuniko.Software.Qwen3Tokenizer.Sample/Yuniko.Software.Qwen3Tokenizer.Sample.csproj" Id="e18691dc-8d40-4dcc-a9db-8c2ad8605c08" />
+  </Folder>
   <Folder Name="/Solution Items/">
-    <File Path="Directory.Build.props" />
-    <File Path=".editorconfig" />
-    <File Path="../.gitignore" />
     <File Path="../.gitattributes" />
+    <File Path="../.gitignore" />
+    <File Path=".editorconfig" />
+    <File Path="Directory.Packages.props" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/Yuniko.Software.Qwen3Tokenizer/Yuniko.Software.Qwen3Tokenizer.csproj" />
+    <Project Path="src/Yuniko.Software.Qwen3Tokenizer/Yuniko.Software.Qwen3Tokenizer.csproj" Id="af21a842-f610-415b-9e49-31d4b3c1f263" />
   </Folder>
 </Solution>

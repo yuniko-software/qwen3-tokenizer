@@ -1,6 +1,9 @@
-namespace Yuniko.Software.Qwen3Tokenizer;
+﻿namespace Yuniko.Software.Qwen3Tokenizer;
 
 /// <summary>
-/// Detailed encoding result with tokens and offsets.
+/// Result of encoding operation with detailed token information.
 /// </summary>
-public record EncodingResult(int[] Ids, string[] Tokens, (int, int)[] Offsets);
+public record EncodingResult(
+    int[] Ids,
+    string[] Tokens,
+    (int Index, int Length)[] Offsets);
