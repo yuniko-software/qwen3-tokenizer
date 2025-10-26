@@ -125,12 +125,12 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
         var fileName = Path.GetFileName(destinationPath);
         progress?.Report(new DownloadProgress(fileName, 0, null, $"Starting download from {url}"));
 
-        var response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result;
+        var response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
         response.EnsureSuccessStatusCode();
 
         var totalBytes = response.Content.Headers.ContentLength;
 
-        using var contentStream = response.Content.ReadAsStreamAsync().Result;
+        using var contentStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
         using var fileStream = File.Create(destinationPath);
 
         var buffer = new byte[8192];
@@ -162,20 +162,39 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
 
         var totalBytes = response.Content.Headers.ContentLength;
 
-        using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-        using var fileStream = File.Create(destinationPath);
+        var tempPath = destinationPath + ".tmp";
 
-        var buffer = new byte[8192];
-        long bytesDownloaded = 0;
-        int bytesRead;
-
-        while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+        try
         {
-            await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-            bytesDownloaded += bytesRead;
-            progress?.Report(new DownloadProgress(fileName, bytesDownloaded, totalBytes, "Downloading"));
-        }
+            using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            using (var fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, useAsync: true))
+            {
+                var buffer = new byte[8192];
+                long bytesDownloaded = 0;
+                int bytesRead;
 
-        progress?.Report(new DownloadProgress(fileName, bytesDownloaded, totalBytes, $"Downloaded to {destinationPath}"));
+                while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+                {
+                    await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
+                    bytesDownloaded += bytesRead;
+                    progress?.Report(new DownloadProgress(fileName, bytesDownloaded, totalBytes, "Downloading"));
+                }
+
+                await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            // Only move temp file to destination if download completed successfully
+            File.Move(tempPath, destinationPath, overwrite: true);
+            progress?.Report(new DownloadProgress(fileName, totalBytes ?? 0, totalBytes, $"Downloaded to {destinationPath}"));
+        }
+        catch
+        {
+            // Clean up temporary file on any error (including cancellation)
+            if (File.Exists(tempPath))
+            {
+                File.Delete(tempPath); 
+            }
+            throw;
+        }
     }
 }
