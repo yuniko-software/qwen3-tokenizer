@@ -14,6 +14,21 @@ public partial class Qwen3Tokenizer
     private readonly int _padTokenId;
 
     /// <summary>
+    /// Gets the vocabulary size.
+    /// </summary>
+    public int VocabularySize => _tokenizer.Vocabulary.Count;
+
+    /// <summary>
+    /// Gets the vocabulary dictionary.
+    /// </summary>
+    public IReadOnlyDictionary<string, int> Vocabulary => _tokenizer.Vocabulary;
+
+    /// <summary>
+    /// Gets all special tokens.
+    /// </summary>
+    public IReadOnlyDictionary<string, int> SpecialTokens => _specialTokens;
+
+    /// <summary>
     /// Creates a Qwen3 tokenizer from vocabulary and merges files.
     /// </summary>
     /// <param name="vocabPath">Path to vocab.json file</param>
@@ -50,34 +65,54 @@ public partial class Qwen3Tokenizer
     }
 
     /// <summary>
+    /// Creates a Qwen3 tokenizer directly from local vocabulary and merges files.
+    /// </summary>
+    /// <param name="vocabPath">Path to vocab.json file</param>
+    /// <param name="mergesPath">Path to merges.txt file</param>
+    /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
+    /// <returns>A new Qwen3Tokenizer instance.</returns>
+    public static Qwen3Tokenizer FromFiles(
+        string vocabPath,
+        string mergesPath,
+        Qwen3TokenizerOptions? options = null)
+    {
+        return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
+    }
+
+    /// <summary>
     /// Downloads tokenizer files from HuggingFace and creates a Qwen3 tokenizer.
     /// </summary>
     /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-Embedding-0.6B")</param>
-    /// <param name="cacheDir">Directory to cache downloaded files</param>
+    /// <param name="cacheDir">Directory to cache downloaded files. If null, uses temporary directory.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
-    public static Qwen3Tokenizer FromPretrained(
+    /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
+    /// <param name="progress">Optional progress reporter for download operations.</param>
+    /// <returns>A new Qwen3Tokenizer instance.</returns>
+    public static Qwen3Tokenizer FromHuggingFace(
         string modelName = "Qwen/Qwen3-Embedding-0.6B",
         string? cacheDir = null,
-        Qwen3TokenizerOptions? options = null)
+        Qwen3TokenizerOptions? options = null,
+        HttpClient? httpClient = null,
+        IProgress<DownloadProgress>? progress = null)
     {
-        cacheDir ??= Path.Combine(Path.GetTempPath(), "qwen3_tokenizer");
-        Directory.CreateDirectory(cacheDir);
+        var provider = new HuggingFaceFileProvider(modelName, cacheDir, httpClient);
+        var (vocabPath, mergesPath) = provider.GetFiles(progress);
+        return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
+    }
 
-        var vocabPath = Path.Combine(cacheDir, "vocab.json");
-        var mergesPath = Path.Combine(cacheDir, "merges.txt");
-
-        if (!File.Exists(vocabPath))
-        {
-            var vocabUrl = $"https://huggingface.co/{modelName}/resolve/main/vocab.json";
-            DownloadFile(vocabUrl, vocabPath);
-        }
-
-        if (!File.Exists(mergesPath))
-        {
-            var mergesUrl = $"https://huggingface.co/{modelName}/resolve/main/merges.txt";
-            DownloadFile(mergesUrl, mergesPath);
-        }
-
+    /// <summary>
+    /// Creates a Qwen3 tokenizer using a custom file provider.
+    /// </summary>
+    /// <param name="fileProvider">The file provider to use for obtaining tokenizer files.</param>
+    /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
+    /// <param name="progress">Optional progress reporter for download operations.</param>
+    /// <returns>A new Qwen3Tokenizer instance.</returns>
+    public static Qwen3Tokenizer FromProvider(
+        ITokenizerFileProvider fileProvider,
+        Qwen3TokenizerOptions? options = null,
+        IProgress<DownloadProgress>? progress = null)
+    {
+        var (vocabPath, mergesPath) = fileProvider.GetFiles(progress);
         return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
     }
 
@@ -85,33 +120,40 @@ public partial class Qwen3Tokenizer
     /// Asynchronously downloads tokenizer files from HuggingFace and creates a Qwen3 tokenizer.
     /// </summary>
     /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-Embedding-0.6B")</param>
-    /// <param name="cacheDir">Directory to cache downloaded files</param>
+    /// <param name="cacheDir">Directory to cache downloaded files. If null, uses temporary directory.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
+    /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
+    /// <param name="progress">Optional progress reporter for download operations.</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    public static async Task<Qwen3Tokenizer> FromPretrainedAsync(
+    /// <returns>A new Qwen3Tokenizer instance.</returns>
+    public static async Task<Qwen3Tokenizer> FromHuggingFaceAsync(
         string modelName = "Qwen/Qwen3-Embedding-0.6B",
         string? cacheDir = null,
         Qwen3TokenizerOptions? options = null,
+        HttpClient? httpClient = null,
+        IProgress<DownloadProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        cacheDir ??= Path.Combine(Path.GetTempPath(), "qwen3_tokenizer");
-        Directory.CreateDirectory(cacheDir);
+        var provider = new HuggingFaceFileProvider(modelName, cacheDir, httpClient);
+        var (vocabPath, mergesPath) = await provider.GetFilesAsync(progress, cancellationToken).ConfigureAwait(false);
+        return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
+    }
 
-        var vocabPath = Path.Combine(cacheDir, "vocab.json");
-        var mergesPath = Path.Combine(cacheDir, "merges.txt");
-
-        if (!File.Exists(vocabPath))
-        {
-            var vocabUrl = $"https://huggingface.co/{modelName}/resolve/main/vocab.json";
-            await DownloadFileAsync(vocabUrl, vocabPath, cancellationToken);
-        }
-
-        if (!File.Exists(mergesPath))
-        {
-            var mergesUrl = $"https://huggingface.co/{modelName}/resolve/main/merges.txt";
-            await DownloadFileAsync(mergesUrl, mergesPath, cancellationToken);
-        }
-
+    /// <summary>
+    /// Asynchronously creates a Qwen3 tokenizer using a custom file provider.
+    /// </summary>
+    /// <param name="fileProvider">The file provider to use for obtaining tokenizer files.</param>
+    /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
+    /// <param name="progress">Optional progress reporter for download operations.</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A new Qwen3Tokenizer instance.</returns>
+    public static async Task<Qwen3Tokenizer> FromProviderAsync(
+        ITokenizerFileProvider fileProvider,
+        Qwen3TokenizerOptions? options = null,
+        IProgress<DownloadProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        var (vocabPath, mergesPath) = await fileProvider.GetFilesAsync(progress, cancellationToken).ConfigureAwait(false);
         return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
     }
 
@@ -223,27 +265,12 @@ public partial class Qwen3Tokenizer
     }
 
     /// <summary>
-    /// Gets the vocabulary size.
-    /// </summary>
-    public int VocabularySize => _tokenizer.Vocabulary.Count;
-
-    /// <summary>
-    /// Gets the vocabulary dictionary.
-    /// </summary>
-    public IReadOnlyDictionary<string, int> Vocabulary => _tokenizer.Vocabulary;
-
-    /// <summary>
     /// Gets a special token ID by name.
     /// </summary>
     public int? GetSpecialTokenId(string tokenName)
     {
         return _specialTokens.TryGetValue(tokenName, out var id) ? id : null;
     }
-
-    /// <summary>
-    /// Gets all special tokens.
-    /// </summary>
-    public IReadOnlyDictionary<string, int> SpecialTokens => _specialTokens;
 
     /// <summary>
     /// Prepares input for ONNX Runtime inference.
@@ -296,35 +323,5 @@ public partial class Qwen3Tokenizer
         }
 
         return (inputIds, attentionMask);
-    }
-
-    private static void DownloadFile(string url, string destinationPath)
-    {
-        using var client = new HttpClient();
-        client.Timeout = TimeSpan.FromMinutes(10);
-
-        Console.WriteLine($"Downloading {url}...");
-        var response = client.GetAsync(url).Result;
-        response.EnsureSuccessStatusCode();
-
-        using var fileStream = File.Create(destinationPath);
-        response.Content.CopyToAsync(fileStream).Wait();
-
-        Console.WriteLine($"Downloaded to {destinationPath}");
-    }
-
-    private static async Task DownloadFileAsync(string url, string destinationPath, CancellationToken cancellationToken = default)
-    {
-        using var client = new HttpClient();
-        client.Timeout = TimeSpan.FromMinutes(10);
-
-        Console.WriteLine($"Downloading {url}...");
-        var response = await client.GetAsync(url, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        using var fileStream = File.Create(destinationPath);
-        await response.Content.CopyToAsync(fileStream, cancellationToken);
-
-        Console.WriteLine($"Downloaded to {destinationPath}");
     }
 }
