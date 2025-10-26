@@ -313,4 +313,4 @@ Console.WriteLine("  • PrepareForOnnxBatch(texts[], maxLength?) → (long[,], 
 
 Console.WriteLine("\n=== Sample Complete ===");
 Console.WriteLine("All examples demonstrate the Qwen3 Tokenizer capabilities.");
-Console.WriteLine("For more information, visit: https://github.com/yuniko-software/qwen3-tokenizer...\n");
+Console.WriteLine("For more information, visit: https://github.com/yuniko-software/qwen3-tokenizer\n");
