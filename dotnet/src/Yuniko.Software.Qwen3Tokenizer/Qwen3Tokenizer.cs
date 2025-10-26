@@ -127,7 +127,7 @@ public partial class Qwen3Tokenizer
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     public static async Task<Qwen3Tokenizer> FromHuggingFaceAsync(
-        string modelName,
+        string modelName = "Qwen/Qwen3-Embedding-0.6B",
         string? cacheDir = null,
         Qwen3TokenizerOptions? options = null,
         HttpClient? httpClient = null,
