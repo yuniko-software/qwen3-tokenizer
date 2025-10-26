@@ -84,4 +84,32 @@ Console.WriteLine($"Input text: \"{onnxText}\"");
 Console.WriteLine($"Input IDs (padded to 20): [{string.Join(", ", inputIds)}]");
 Console.WriteLine($"Attention mask: [{string.Join(", ", attentionMask)}]\n");
 
+// Example 9: Using custom tokenizer options
+Console.WriteLine("--- Example 9: Custom Tokenizer Options ---");
+Console.WriteLine("Creating tokenizer with custom options...");
+
+// Access default options
+var defaultOptions = Qwen3TokenizerOptions.Default;
+Console.WriteLine($"Default EOS Token ID: {defaultOptions.EosTokenId}");
+Console.WriteLine($"Default ByteLevel: {defaultOptions.ByteLevel}");
+
+// Create custom options using 'with' expression
+var customOptions = Qwen3TokenizerOptions.Default with
+{
+    ByteLevel = false // Example: disable byte-level encoding
+};
+
+Console.WriteLine($"Custom ByteLevel: {customOptions.ByteLevel}");
+Console.WriteLine("Note: Custom options can be passed to FromPretrained() or FromPretrainedAsync()");
+Console.WriteLine($"Example: var customTokenizer = await Qwen3Tokenizer.FromPretrainedAsync(options: customOptions);\n");
+
+// Example 10: Accessing special token constants
+Console.WriteLine("--- Example 10: Special Token Constants ---");
+Console.WriteLine("You can access special token IDs directly from constants:");
+Console.WriteLine($"EndOfText Token ID: {Qwen3EmbeddingModelSpecialTokens.EndOfTextTokenId}");
+Console.WriteLine($"ImStart Token ID: {Qwen3EmbeddingModelSpecialTokens.ImStartTokenId}");
+Console.WriteLine($"ImEnd Token ID: {Qwen3EmbeddingModelSpecialTokens.ImEndTokenId}");
+Console.WriteLine($"EndOfText Token String: \"{Qwen3EmbeddingModelSpecialTokens.EndOfText}\"");
+Console.WriteLine($"ImStart Token String: \"{Qwen3EmbeddingModelSpecialTokens.ImStart}\"\n");
+
 Console.WriteLine("=== Demo Complete ===");

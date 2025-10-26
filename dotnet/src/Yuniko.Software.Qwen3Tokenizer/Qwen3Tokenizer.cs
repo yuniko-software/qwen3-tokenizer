@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using Microsoft.ML.Tokenizers;
+﻿using Microsoft.ML.Tokenizers;
 
 namespace Yuniko.Software.Qwen3Tokenizer;
 
@@ -11,35 +10,19 @@ public partial class Qwen3Tokenizer
 {
     private readonly BpeTokenizer _tokenizer;
     private readonly Dictionary<string, int> _specialTokens;
-
-    public int EndOfTextTokenId { get; } = 151643;
-    public int ImStartTokenId { get; } = 151644;
-    public int ImEndTokenId { get; } = 151645;
-    public int ObjectRefStartTokenId { get; } = 151646;
-    public int ObjectRefEndTokenId { get; } = 151647;
-    public int BoxStartTokenId { get; } = 151648;
-    public int BoxEndTokenId { get; } = 151649;
-    public int QuadStartTokenId { get; } = 151650;
-    public int QuadEndTokenId { get; } = 151651;
-    public int VisionStartTokenId { get; } = 151652;
-    public int VisionEndTokenId { get; } = 151653;
-    public int VisionPadTokenId { get; } = 151654;
-    public int ImagePadTokenId { get; } = 151655;
-    public int VideoPadTokenId { get; } = 151656;
-
-    public int EosTokenId => EndOfTextTokenId;
-    public int PadTokenId => EndOfTextTokenId;
-    public int? BosTokenId => null;
-
-    [GeneratedRegex(@"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+", RegexOptions.Compiled)]
-    private static partial Regex PreTokenizerRegex();
+    private readonly int _eosTokenId;
+    private readonly int _padTokenId;
 
     /// <summary>
     /// Creates a Qwen3 tokenizer from vocabulary and merges files.
     /// </summary>
     /// <param name="vocabPath">Path to vocab.json file</param>
     /// <param name="mergesPath">Path to merges.txt file</param>
-    public Qwen3Tokenizer(string vocabPath, string mergesPath)
+    /// <param name="options">Tokenizer configuration options.</param>
+    private Qwen3Tokenizer(
+        string vocabPath,
+        string mergesPath,
+        Qwen3TokenizerOptions options)
     {
         if (!File.Exists(vocabPath))
         {
@@ -51,41 +34,19 @@ public partial class Qwen3Tokenizer
             throw new FileNotFoundException($"Merges file not found: {mergesPath}");
         }
 
-        // Initialize special tokens dictionary
-        _specialTokens = new Dictionary<string, int>
-        {
-            { "<|endoftext|>", EndOfTextTokenId },
-            { "<|im_start|>", ImStartTokenId },
-            { "<|im_end|>", ImEndTokenId },
-            { "<|object_ref_start|>", ObjectRefStartTokenId },
-            { "<|object_ref_end|>", ObjectRefEndTokenId },
-            { "<|box_start|>", BoxStartTokenId },
-            { "<|box_end|>", BoxEndTokenId },
-            { "<|quad_start|>", QuadStartTokenId },
-            { "<|quad_end|>", QuadEndTokenId },
-            { "<|vision_start|>", VisionStartTokenId },
-            { "<|vision_end|>", VisionEndTokenId },
-            { "<|vision_pad|>", VisionPadTokenId },
-            { "<|image_pad|>", ImagePadTokenId },
-            { "<|video_pad|>", VideoPadTokenId }
-        };
+        _specialTokens = new Dictionary<string, int>(options.SpecialTokens);
+        _eosTokenId = options.EosTokenId;
+        _padTokenId = _eosTokenId;
 
-        // Create BPE tokenizer with proper configuration matching HuggingFace tokenizer.json
-        // The Qwen tokenizer uses:
-        // - NFC normalization
-        // - Regex pre-tokenizer with specific pattern
-        // - ByteLevel encoding/decoding
-        var regex = PreTokenizerRegex();
-
-        var options = new BpeOptions(vocabPath, mergesPath)
+        var bpeOptions = new BpeOptions(vocabPath, mergesPath)
         {
-            ByteLevel = true, // Enable byte-level BPE encoding/decoding (critical for Qwen!)
-            Normalizer = new NfcNormalizer(), // Unicode NFC normalization
-            PreTokenizer = new RegexPreTokenizer(regex, specialTokens: null), // Regex pattern from Qwen tokenizer.json
+            ByteLevel = options.ByteLevel,
+            Normalizer = options.Normalizer,
+            PreTokenizer = new RegexPreTokenizer(options.PreTokenizerRegex, specialTokens: null),
             SpecialTokens = _specialTokens
         };
 
-        _tokenizer = BpeTokenizer.Create(options);
+        _tokenizer = BpeTokenizer.Create(bpeOptions);
     }
 
     /// <summary>
@@ -93,7 +54,11 @@ public partial class Qwen3Tokenizer
     /// </summary>
     /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-Embedding-0.6B")</param>
     /// <param name="cacheDir">Directory to cache downloaded files</param>
-    public static Qwen3Tokenizer FromPretrained(string modelName = "Qwen/Qwen3-Embedding-0.6B", string? cacheDir = null)
+    /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
+    public static Qwen3Tokenizer FromPretrained(
+        string modelName = "Qwen/Qwen3-Embedding-0.6B",
+        string? cacheDir = null,
+        Qwen3TokenizerOptions? options = null)
     {
         cacheDir ??= Path.Combine(Path.GetTempPath(), "qwen3_tokenizer");
         Directory.CreateDirectory(cacheDir);
@@ -113,7 +78,7 @@ public partial class Qwen3Tokenizer
             DownloadFile(mergesUrl, mergesPath);
         }
 
-        return new Qwen3Tokenizer(vocabPath, mergesPath);
+        return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
     }
 
     /// <summary>
@@ -121,10 +86,12 @@ public partial class Qwen3Tokenizer
     /// </summary>
     /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-Embedding-0.6B")</param>
     /// <param name="cacheDir">Directory to cache downloaded files</param>
+    /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
     /// <param name="cancellationToken">Cancellation token</param>
     public static async Task<Qwen3Tokenizer> FromPretrainedAsync(
         string modelName = "Qwen/Qwen3-Embedding-0.6B",
         string? cacheDir = null,
+        Qwen3TokenizerOptions? options = null,
         CancellationToken cancellationToken = default)
     {
         cacheDir ??= Path.Combine(Path.GetTempPath(), "qwen3_tokenizer");
@@ -145,7 +112,7 @@ public partial class Qwen3Tokenizer
             await DownloadFileAsync(mergesUrl, mergesPath, cancellationToken);
         }
 
-        return new Qwen3Tokenizer(vocabPath, mergesPath);
+        return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
     }
 
     /// <summary>
@@ -156,22 +123,19 @@ public partial class Qwen3Tokenizer
     /// <returns>Array of token IDs</returns>
     public int[] Encode(string text, bool addEos = true)
     {
-        // Use EncodeToIds which returns IReadOnlyList<int>
         IReadOnlyList<int> ids = _tokenizer.EncodeToIds(text);
 
         if (addEos)
         {
-            // Convert to array and append EOS token
             var result = new int[ids.Count + 1];
             for (int i = 0; i < ids.Count; i++)
             {
                 result[i] = ids[i];
             }
-            result[ids.Count] = EosTokenId;
+            result[ids.Count] = _eosTokenId;
             return result;
         }
 
-        // Convert IReadOnlyList to array
         if (ids is int[] array)
         {
             return array;
@@ -190,7 +154,6 @@ public partial class Qwen3Tokenizer
     /// </summary>
     public EncodingResult EncodeDetailed(string text, bool addEos = true)
     {
-        // Use EncodeToTokens which returns IReadOnlyList<EncodedToken>
         IReadOnlyList<EncodedToken> encodedTokens = _tokenizer.EncodeToTokens(text, out string? normalizedText);
 
         var ids = new int[encodedTokens.Count + (addEos ? 1 : 0)];
@@ -206,8 +169,8 @@ public partial class Qwen3Tokenizer
 
         if (addEos)
         {
-            ids[encodedTokens.Count] = EosTokenId;
-            tokens[encodedTokens.Count] = "<|endoftext|>";
+            ids[encodedTokens.Count] = _eosTokenId;
+            tokens[encodedTokens.Count] = Qwen3EmbeddingModelSpecialTokens.EndOfText;
             offsets[encodedTokens.Count] = (text.Length, 0);
         }
 
@@ -248,7 +211,6 @@ public partial class Qwen3Tokenizer
             ids = [.. ids.Where(id => !specialTokenIds.Contains(id))];
         }
 
-        // Use the new Decode method
         return _tokenizer.Decode(ids) ?? string.Empty;
     }
 
@@ -306,7 +268,7 @@ public partial class Qwen3Tokenizer
 
         for (int i = actualLength; i < maxLength; i++)
         {
-            inputIds[i] = PadTokenId;
+            inputIds[i] = _padTokenId;
             attentionMask[i] = 0;
         }
 
