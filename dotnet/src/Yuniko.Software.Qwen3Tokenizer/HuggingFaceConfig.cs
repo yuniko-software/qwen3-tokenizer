@@ -21,7 +21,7 @@ public sealed record HuggingFaceConfig(
     /// <summary>
     /// Gets the full URL for a file in the model repository.
     /// </summary>
-    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-Embedding-0.6B").</param>
+    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-0.6B", "Qwen/Qwen3-VL-30B-A3B-Instruct").</param>
     /// <param name="fileName">File name to download.</param>
     /// <returns>Full URL to the file.</returns>
     public string GetFileUrl(string modelName, string fileName)
