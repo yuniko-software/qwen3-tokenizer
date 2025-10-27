@@ -3,8 +3,9 @@
 namespace Yuniko.Software.Qwen3Tokenizer;
 
 /// <summary>
-/// Tokenizer for Qwen3-Embedding models.
+/// Tokenizer for Qwen3 models.
 /// Based on byte-level BPE (Byte-Pair Encoding) similar to GPT-2.
+/// Supports all Qwen3 model variants including Embedding, General, Reranker, and Vision-Language models.
 /// </summary>
 public partial class Qwen3Tokenizer
 {
@@ -14,14 +15,25 @@ public partial class Qwen3Tokenizer
     private readonly int _padTokenId;
 
     /// <summary>
-    /// Gets the vocabulary size.
+    /// Gets the vocabulary size including special tokens.
     /// </summary>
-    public int VocabularySize => _tokenizer.Vocabulary.Count;
+    public int VocabularySize => _tokenizer.Vocabulary.Count + _specialTokens.Count;
 
     /// <summary>
-    /// Gets the vocabulary dictionary.
+    /// Gets the vocabulary dictionary including special tokens.
     /// </summary>
-    public IReadOnlyDictionary<string, int> Vocabulary => _tokenizer.Vocabulary;
+    public IReadOnlyDictionary<string, int> Vocabulary
+    {
+        get
+        {
+            var combined = new Dictionary<string, int>(_tokenizer.Vocabulary);
+            foreach (var (token, id) in _specialTokens)
+            {
+                combined[token] = id;
+            }
+            return combined;
+        }
+    }
 
     /// <summary>
     /// Gets all special tokens.
@@ -51,13 +63,13 @@ public partial class Qwen3Tokenizer
 
         _specialTokens = new Dictionary<string, int>(options.SpecialTokens);
         _eosTokenId = options.EosTokenId;
-        _padTokenId = _eosTokenId;
+        _padTokenId = options.PadTokenId;
 
         var bpeOptions = new BpeOptions(vocabPath, mergesPath)
         {
             ByteLevel = options.ByteLevel,
             Normalizer = options.Normalizer,
-            PreTokenizer = new RegexPreTokenizer(options.PreTokenizerRegex, specialTokens: null),
+            PreTokenizer = new RegexPreTokenizer(options.PreTokenizerRegex, specialTokens: _specialTokens),
             SpecialTokens = _specialTokens
         };
 
@@ -82,14 +94,14 @@ public partial class Qwen3Tokenizer
     /// <summary>
     /// Downloads tokenizer files from HuggingFace and creates a Qwen3 tokenizer.
     /// </summary>
-    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-Embedding-0.6B")</param>
+    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-0.6B", "Qwen/Qwen3-Embedding-0.6B", "Qwen/Qwen3-VL-30B-A3B-Instruct")</param>
     /// <param name="cacheDir">Directory to cache downloaded files. If null, uses temporary directory.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
     /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
     /// <param name="progress">Optional progress reporter for download operations.</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     public static Qwen3Tokenizer FromHuggingFace(
-        string modelName = "Qwen/Qwen3-Embedding-0.6B",
+        string modelName = "Qwen/Qwen3-0.6B",
         string? cacheDir = null,
         Qwen3TokenizerOptions? options = null,
         HttpClient? httpClient = null,
@@ -119,7 +131,7 @@ public partial class Qwen3Tokenizer
     /// <summary>
     /// Asynchronously downloads tokenizer files from HuggingFace and creates a Qwen3 tokenizer.
     /// </summary>
-    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-Embedding-0.6B")</param>
+    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-0.6B", "Qwen/Qwen3-Embedding-0.6B", "Qwen/Qwen3-VL-30B-A3B-Instruct")</param>
     /// <param name="cacheDir">Directory to cache downloaded files. If null, uses temporary directory.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
     /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
@@ -127,7 +139,7 @@ public partial class Qwen3Tokenizer
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     public static async Task<Qwen3Tokenizer> FromHuggingFaceAsync(
-        string modelName = "Qwen/Qwen3-Embedding-0.6B",
+        string modelName = "Qwen/Qwen3-0.6B",
         string? cacheDir = null,
         Qwen3TokenizerOptions? options = null,
         HttpClient? httpClient = null,
@@ -212,7 +224,7 @@ public partial class Qwen3Tokenizer
         if (addEos)
         {
             ids[encodedTokens.Count] = _eosTokenId;
-            tokens[encodedTokens.Count] = Qwen3EmbeddingModelSpecialTokens.EndOfText;
+            tokens[encodedTokens.Count] = Qwen3SpecialTokens.ImEnd;
             offsets[encodedTokens.Count] = (text.Length, 0);
         }
 

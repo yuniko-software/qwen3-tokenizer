@@ -8,24 +8,27 @@ namespace Yuniko.Software.Qwen3Tokenizer;
 /// </summary>
 /// <param name="SpecialTokens">The special tokens dictionary.</param>
 /// <param name="PreTokenizerRegex">The pre-tokenizer regex pattern.</param>
-/// <param name="EosTokenId">The end-of-sequence token ID. This is also used as the padding token ID.</param>
+/// <param name="EosTokenId">The end-of-sequence token ID.</param>
+/// <param name="PadTokenId">The padding token ID.</param>
 /// <param name="Normalizer">The normalizer. Defaults to NFC normalization.</param>
 /// <param name="ByteLevel">Whether to use byte-level BPE encoding/decoding. Defaults to true.</param>
 public sealed record Qwen3TokenizerOptions(
     IReadOnlyDictionary<string, int> SpecialTokens,
     Regex PreTokenizerRegex,
     int EosTokenId,
+    int PadTokenId,
     Normalizer? Normalizer = null,
     bool ByteLevel = true)
 {
     /// <summary>
-    /// Default options for Qwen3 Embedding models.
+    /// Default options for Qwen3 models.
     /// Matches the HuggingFace tokenizer configuration.
     /// </summary>
     public static readonly Qwen3TokenizerOptions Default = new(
-        SpecialTokens: Qwen3EmbeddingModelSpecialTokens.SpecialTokens,
-        PreTokenizerRegex: Qwen3EmbeddingModelSpecialTokens.GetPreTokenizerRegex(),
-        EosTokenId: Qwen3EmbeddingModelSpecialTokens.EndOfTextTokenId,
+        SpecialTokens: Qwen3SpecialTokens.SpecialTokens,
+        PreTokenizerRegex: Qwen3SpecialTokens.GetPreTokenizerRegex(),
+        EosTokenId: Qwen3SpecialTokens.ImEndTokenId,
+        PadTokenId: Qwen3SpecialTokens.EndOfTextTokenId,
         Normalizer: new NfcNormalizer(),
         ByteLevel: true);
 }

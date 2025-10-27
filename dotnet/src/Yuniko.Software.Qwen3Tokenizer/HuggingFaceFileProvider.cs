@@ -14,7 +14,7 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
     /// <summary>
     /// Creates a new HuggingFace file provider.
     /// </summary>
-    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-Embedding-0.6B").</param>
+    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-0.6B", "Qwen/Qwen3-VL-30B-A3B-Instruct").</param>
     /// <param name="cacheDir">Directory to cache downloaded files. If null, uses temporary directory.</param>
     /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
     /// <param name="config">Configuration for HuggingFace downloads. If null, uses HuggingFaceConfig.Default.</param>
@@ -192,7 +192,7 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
             // Clean up temporary file on any error (including cancellation)
             if (File.Exists(tempPath))
             {
-                File.Delete(tempPath); 
+                File.Delete(tempPath);
             }
             throw;
         }
