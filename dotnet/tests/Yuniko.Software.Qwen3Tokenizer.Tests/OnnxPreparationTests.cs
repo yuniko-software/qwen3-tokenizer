@@ -55,7 +55,7 @@ public class OnnxPreparationTests
         Assert.Equal(maxLength, result.InputIds.Length);
         Assert.All(result.AttentionMask, mask => Assert.Equal(1L, mask));
 
-        // All position IDs should be sequential when no padding
+        // All position IDs should be sequential when all tokens are real (non-padded), regardless of whether truncation occurred
         for (int i = 0; i < maxLength; i++)
         {
             Assert.Equal(i, result.PositionIds[i]);
