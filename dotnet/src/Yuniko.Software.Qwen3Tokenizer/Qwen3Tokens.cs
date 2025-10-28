@@ -3,13 +3,28 @@ using System.Text.RegularExpressions;
 namespace Yuniko.Software.Qwen3Tokenizer;
 
 /// <summary>
-/// Special tokens and constants for Qwen3 models.
+/// Token constants and collections for Qwen3 models.
+/// Contains added tokens, special token IDs, and other token-related constants.
 /// </summary>
-public static partial class Qwen3SpecialTokens
+public static partial class Qwen3Tokens
 {
     // Token IDs
+
+    /// <summary>
+    /// The <c>&lt;|endoftext|&gt;</c> token ID (151643).
+    /// This is used as the PAD token in Qwen3 models.
+    /// </summary>
     public const int EndOfTextTokenId = 151643;
+    /// <summary>
+    /// The <c>&lt;|im_start|&gt;</c> token ID (151644).
+    /// Marks the start of an instant message or chat turn.
+    /// </summary>
     public const int ImStartTokenId = 151644;
+    /// <summary>
+    /// The <c>&lt;|im_end|&gt;</c> token ID (151645).
+    /// Marks the end of an instant message or chat turn.
+    /// This is used as the EOS (End-Of-Sequence) token in Qwen3 models.
+    /// </summary>
     public const int ImEndTokenId = 151645;
     public const int ObjectRefStartTokenId = 151646;
     public const int ObjectRefEndTokenId = 151647;
@@ -75,9 +90,11 @@ public static partial class Qwen3SpecialTokens
     public static partial Regex GetPreTokenizerRegex();
 
     /// <summary>
-    /// Default special tokens dictionary for Qwen3 models.
+    /// All added tokens dictionary for Qwen3 models (all 26 tokens).
+    /// These tokens are treated as atomic during pre-tokenization.
+    /// In HuggingFace terminology, these are "added_tokens" - some are marked as "special": true, others as "special": false.
     /// </summary>
-    public static readonly IReadOnlyDictionary<string, int> SpecialTokens = new Dictionary<string, int>
+    public static readonly IReadOnlyDictionary<string, int> AddedTokens = new Dictionary<string, int>
     {
         { EndOfText, EndOfTextTokenId },
         { ImStart, ImStartTokenId },
@@ -105,5 +122,28 @@ public static partial class Qwen3SpecialTokens
         { ToolResponseEnd, ToolResponseEndTokenId },
         { Think, ThinkTokenId },
         { ThinkEnd, ThinkEndTokenId }
+    };
+
+    /// <summary>
+    /// Token IDs marked as "special": true in HuggingFace (14 tokens: 151643-151656).
+    /// These are skipped during decoding when skip_special_tokens=True.
+    /// The remaining added tokens (151657-151668) have "special": false and are NOT skipped.
+    /// </summary>
+    public static readonly IReadOnlySet<int> SpecialTokenIds = new HashSet<int>
+    {
+        EndOfTextTokenId,      // 151643
+        ImStartTokenId,        // 151644
+        ImEndTokenId,          // 151645
+        ObjectRefStartTokenId, // 151646
+        ObjectRefEndTokenId,   // 151647
+        BoxStartTokenId,       // 151648
+        BoxEndTokenId,         // 151649
+        QuadStartTokenId,      // 151650
+        QuadEndTokenId,        // 151651
+        VisionStartTokenId,    // 151652
+        VisionEndTokenId,      // 151653
+        VisionPadTokenId,      // 151654
+        ImagePadTokenId,       // 151655
+        VideoPadTokenId        // 151656
     };
 }

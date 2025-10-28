@@ -10,24 +10,25 @@ namespace Yuniko.Software.Qwen3Tokenizer;
 public partial class Qwen3Tokenizer
 {
     private readonly BpeTokenizer _tokenizer;
-    private readonly Dictionary<string, int> _specialTokens;
+    private readonly Dictionary<string, int> _addedTokens;
+    private readonly IReadOnlySet<int> _specialTokenIds;
     private readonly int _eosTokenId;
     private readonly int _padTokenId;
 
     /// <summary>
-    /// Gets the vocabulary size including special tokens.
+    /// Gets the vocabulary size including added tokens.
     /// </summary>
-    public int VocabularySize => _tokenizer.Vocabulary.Count + _specialTokens.Count;
+    public int VocabularySize => _tokenizer.Vocabulary.Count + _addedTokens.Count;
 
     /// <summary>
-    /// Gets the vocabulary dictionary including special tokens.
+    /// Gets the vocabulary dictionary including added tokens.
     /// </summary>
     public IReadOnlyDictionary<string, int> Vocabulary
     {
         get
         {
             var combined = new Dictionary<string, int>(_tokenizer.Vocabulary);
-            foreach (var (token, id) in _specialTokens)
+            foreach (var (token, id) in _addedTokens)
             {
                 combined[token] = id;
             }
@@ -36,9 +37,16 @@ public partial class Qwen3Tokenizer
     }
 
     /// <summary>
-    /// Gets all special tokens.
+    /// Gets all added tokens.
+    /// These are treated as atomic during pre-tokenization.
     /// </summary>
-    public IReadOnlyDictionary<string, int> SpecialTokens => _specialTokens;
+    public IReadOnlyDictionary<string, int> AddedTokens => _addedTokens;
+
+    /// <summary>
+    /// Gets the token IDs marked as "special": true in HuggingFace.
+    /// These are skipped during decoding when skipSpecialTokens=true.
+    /// </summary>
+    public IReadOnlySet<int> SpecialTokenIds => _specialTokenIds;
 
     /// <summary>
     /// Creates a Qwen3 tokenizer from vocabulary and merges files.
@@ -61,7 +69,8 @@ public partial class Qwen3Tokenizer
             throw new FileNotFoundException($"Merges file not found: {mergesPath}");
         }
 
-        _specialTokens = new Dictionary<string, int>(options.SpecialTokens);
+        _addedTokens = new Dictionary<string, int>(options.AddedTokens);
+        _specialTokenIds = options.SpecialTokenIds;
         _eosTokenId = options.EosTokenId;
         _padTokenId = options.PadTokenId;
 
@@ -69,8 +78,8 @@ public partial class Qwen3Tokenizer
         {
             ByteLevel = options.ByteLevel,
             Normalizer = options.Normalizer,
-            PreTokenizer = new RegexPreTokenizer(options.PreTokenizerRegex, specialTokens: _specialTokens),
-            SpecialTokens = _specialTokens
+            PreTokenizer = new RegexPreTokenizer(options.PreTokenizerRegex, specialTokens: _addedTokens),
+            SpecialTokens = _addedTokens
         };
 
         _tokenizer = BpeTokenizer.Create(bpeOptions);
@@ -173,9 +182,9 @@ public partial class Qwen3Tokenizer
     /// Encodes text into token IDs.
     /// </summary>
     /// <param name="text">Input text to tokenize</param>
-    /// <param name="addEos">Whether to add EOS token at the end</param>
+    /// <param name="addEos">Whether to add EOS token at the end. Default is false to match HuggingFace behavior.</param>
     /// <returns>Array of token IDs</returns>
-    public int[] Encode(string text, bool addEos = true)
+    public int[] Encode(string text, bool addEos = false)
     {
         IReadOnlyList<int> ids = _tokenizer.EncodeToIds(text);
 
@@ -200,13 +209,21 @@ public partial class Qwen3Tokenizer
         {
             idsArray[i] = ids[i];
         }
+
         return idsArray;
     }
 
     /// <summary>
     /// Encodes text and returns detailed encoding information.
     /// </summary>
-    public EncodingResult EncodeDetailed(string text, bool addEos = true)
+    /// <param name="text">Input text to tokenize</param>
+    /// <param name="addEos">Whether to add EOS token at the end. Default is false to match HuggingFace behavior.</param>
+    /// <returns>Detailed encoding result with token IDs, strings, and offsets (in UTF-16 char indices)</returns>
+    /// <remarks>
+    /// Offsets are returned as UTF-16 char indices (matching C# string indexing).
+    /// Note that emojis and other characters outside the Basic Multilingual Plane use 2 UTF-16 code units (surrogate pairs).
+    /// </remarks>
+    public EncodingResult EncodeDetailed(string text, bool addEos = false)
     {
         IReadOnlyList<EncodedToken> encodedTokens = _tokenizer.EncodeToTokens(text, out string? normalizedText);
 
@@ -217,14 +234,14 @@ public partial class Qwen3Tokenizer
         for (int i = 0; i < encodedTokens.Count; i++)
         {
             ids[i] = encodedTokens[i].Id;
-            tokens[i] = encodedTokens[i].Value;
+            tokens[i] = _tokenizer.Decode([encodedTokens[i].Id]) ?? string.Empty;
             offsets[i] = (encodedTokens[i].Offset.Start.Value, encodedTokens[i].Offset.End.Value - encodedTokens[i].Offset.Start.Value);
         }
 
         if (addEos)
         {
             ids[encodedTokens.Count] = _eosTokenId;
-            tokens[encodedTokens.Count] = Qwen3SpecialTokens.ImEnd;
+            tokens[encodedTokens.Count] = Qwen3Tokens.ImEnd;
             offsets[encodedTokens.Count] = (text.Length, 0);
         }
 
@@ -234,7 +251,10 @@ public partial class Qwen3Tokenizer
     /// <summary>
     /// Encodes a batch of texts.
     /// </summary>
-    public int[][] EncodeBatch(IEnumerable<string> texts, bool addEos = true)
+    /// <param name="texts">Collection of texts to encode</param>
+    /// <param name="addEos">Whether to add EOS token at the end. Default is false to match HuggingFace behavior.</param>
+    /// <returns>Array of token ID arrays</returns>
+    public int[][] EncodeBatch(IEnumerable<string> texts, bool addEos = false)
     {
         return [.. texts.Select(text => Encode(text, addEos))];
     }
@@ -243,9 +263,9 @@ public partial class Qwen3Tokenizer
     /// Counts the number of tokens in the text without full encoding.
     /// </summary>
     /// <param name="text">Input text</param>
-    /// <param name="addEos">Whether to add EOS token at the end</param>
+    /// <param name="addEos">Whether to add EOS token at the end. Default is false to match HuggingFace behavior.</param>
     /// <returns>Token count</returns>
-    public int CountTokens(string text, bool addEos = true)
+    public int CountTokens(string text, bool addEos = false)
     {
         int count = _tokenizer.CountTokens(text);
         return addEos ? count + 1 : count;
@@ -255,14 +275,13 @@ public partial class Qwen3Tokenizer
     /// Decodes token IDs back to text.
     /// </summary>
     /// <param name="ids">Token IDs to decode</param>
-    /// <param name="skipSpecialTokens">Whether to skip special tokens in output</param>
+    /// <param name="skipSpecialTokens">Whether to skip special tokens in output (only skips tokens marked as "special": true)</param>
     /// <returns>Decoded text</returns>
     public string Decode(int[] ids, bool skipSpecialTokens = true)
     {
         if (skipSpecialTokens)
         {
-            var specialTokenIds = new HashSet<int>(_specialTokens.Values);
-            ids = [.. ids.Where(id => !specialTokenIds.Contains(id))];
+            ids = [.. ids.Where(id => !_specialTokenIds.Contains(id))];
         }
 
         return _tokenizer.Decode(ids) ?? string.Empty;
@@ -277,11 +296,11 @@ public partial class Qwen3Tokenizer
     }
 
     /// <summary>
-    /// Gets a special token ID by name.
+    /// Gets an added token ID by name.
     /// </summary>
-    public int? GetSpecialTokenId(string tokenName)
+    public int? GetAddedTokenId(string tokenName)
     {
-        return _specialTokens.TryGetValue(tokenName, out var id) ? id : null;
+        return _addedTokens.TryGetValue(tokenName, out var id) ? id : null;
     }
 
     /// <summary>

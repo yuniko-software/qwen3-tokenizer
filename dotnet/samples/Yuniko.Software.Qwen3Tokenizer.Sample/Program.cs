@@ -140,18 +140,18 @@ Console.WriteLine("Press any key to continue...\n");
 Console.ReadKey();
 
 // ============================================================================
-// SECTION 4: Working with Special Tokens
+// SECTION 4: Working with Added Tokens
 // ============================================================================
 Console.WriteLine("\n╔═══════════════════════════════════════════════════════════════╗");
-Console.WriteLine("║ SECTION 4: Working with Special Tokens                       ║");
+Console.WriteLine("║ SECTION 4: Working with Added Tokens                         ║");
 Console.WriteLine("╚═══════════════════════════════════════════════════════════════╝\n");
 
-// List all special tokens
-Console.WriteLine("→ Available Special Tokens");
+// List all added tokens
+Console.WriteLine($"→ Available Added Tokens ({tokenizer.AddedTokens.Count} total)");
 Console.WriteLine("  ┌───────────────────────────┬────────┐");
 Console.WriteLine("  │ Token                     │ ID     │");
 Console.WriteLine("  ├───────────────────────────┼────────┤");
-foreach (var (token, id) in tokenizer.SpecialTokens)
+foreach (var (token, id) in tokenizer.AddedTokens)
 {
     Console.WriteLine($"  │ {token,-25} │ {id,6} │");
 }
@@ -169,12 +169,13 @@ Console.WriteLine("→ Decoding with/without Special Tokens");
 string withSpecialTokens = tokenizer.Decode(idsWithSpecial, skipSpecialTokens: false);
 string withoutSpecialTokens = tokenizer.Decode(idsWithSpecial, skipSpecialTokens: true);
 Console.WriteLine($"  With special tokens:    \"{withSpecialTokens}\"");
-Console.WriteLine($"  Without special tokens: \"{withoutSpecialTokens}\"\n");
+Console.WriteLine($"  Without special tokens: \"{withoutSpecialTokens}\"");
+Console.WriteLine($"  Note: Only {tokenizer.SpecialTokenIds.Count} tokens marked as 'special': true are skipped\n");
 
-// Get specific special token IDs
-Console.WriteLine("→ Get Specific Special Token ID");
-int? eosId = tokenizer.GetSpecialTokenId("<|endoftext|>");
-Console.WriteLine($"  GetSpecialTokenId(\"<|endoftext|>\"): {eosId}\n");
+// Get specific added token IDs
+Console.WriteLine("→ Get Specific Added Token ID");
+int? eosId = tokenizer.GetAddedTokenId("<|endoftext|>");
+Console.WriteLine($"  GetAddedTokenId(\"<|endoftext|>\"): {eosId}\n");
 
 Console.WriteLine("Press any key to continue...\n");
 Console.ReadKey();
@@ -235,7 +236,8 @@ Console.WriteLine("→ Default Tokenizer Options");
 var defaultOptions = Qwen3TokenizerOptions.Default;
 Console.WriteLine($"  EOS Token ID: {defaultOptions.EosTokenId}");
 Console.WriteLine($"  Byte Level: {defaultOptions.ByteLevel}");
-Console.WriteLine($"  Special Tokens Count: {defaultOptions.SpecialTokens.Count}\n");
+Console.WriteLine($"  Added Tokens Count: {defaultOptions.AddedTokens.Count}");
+Console.WriteLine($"  Special Token IDs Count: {defaultOptions.SpecialTokenIds.Count}\n");
 
 // Creating custom options
 Console.WriteLine("→ Custom Tokenizer Options (using record 'with' expression)");
@@ -259,13 +261,15 @@ Console.WriteLine($"  Branch: {customConfig.Branch}");
 Console.WriteLine($"  Vocab File: {customConfig.VocabFileName}");
 Console.WriteLine($"  Merges File: {customConfig.MergesFileName}\n");
 
-// Special token constants
-Console.WriteLine("→ Special Token Constants");
-Console.WriteLine($"  EndOfText Token ID: {Qwen3SpecialTokens.EndOfTextTokenId}");
-Console.WriteLine($"  ImStart Token ID: {Qwen3SpecialTokens.ImStartTokenId}");
-Console.WriteLine($"  ImEnd Token ID: {Qwen3SpecialTokens.ImEndTokenId}");
-Console.WriteLine($"  EndOfText String: \"{Qwen3SpecialTokens.EndOfText}\"");
-Console.WriteLine($"  ImStart String: \"{Qwen3SpecialTokens.ImStart}\"\n");
+// Added token constants
+Console.WriteLine("→ Added Token Constants");
+Console.WriteLine($"  EndOfText Token ID: {Qwen3Tokens.EndOfTextTokenId}");
+Console.WriteLine($"  ImStart Token ID: {Qwen3Tokens.ImStartTokenId}");
+Console.WriteLine($"  ImEnd Token ID: {Qwen3Tokens.ImEndTokenId}");
+Console.WriteLine($"  EndOfText String: \"{Qwen3Tokens.EndOfText}\"");
+Console.WriteLine($"  ImStart String: \"{Qwen3Tokens.ImStart}\"");
+Console.WriteLine($"  Total Added Tokens: {Qwen3Tokens.AddedTokens.Count}");
+Console.WriteLine($"  Special Tokens (skippable): {Qwen3Tokens.SpecialTokenIds.Count}\n");
 
 Console.WriteLine("\n=== Sample Complete ===");
 Console.WriteLine("All examples demonstrate the Qwen3 Tokenizer capabilities.");

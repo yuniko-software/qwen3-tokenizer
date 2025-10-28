@@ -34,11 +34,11 @@ public static class PythonTestDataProvider
 
     public static readonly (string ModelName, string TestDataFileName)[] Models =
     [
-        ("Qwen/Qwen3-0.6B", "test_data_qwen3_0.6b.json"),
-        ("Qwen/Qwen3-Embedding-0.6B", "test_data_qwen3_embedding_0.6b.json"),
-        ("Qwen/Qwen3-Next-80B-A3B-Instruct", "test_data_qwen3_next_80b_a3b_instruct.json"),
-        ("Qwen/Qwen3-VL-30B-A3B-Instruct", "test_data_qwen3_vl_30b_a3b_instruct.json"),
-        ("Qwen/Qwen3-Reranker-0.6B", "test_data_qwen3_reranker_0.6b.json"),
+        ("Qwen/Qwen3-0.6B", "TestData/test_data_qwen3_0.6b.json"),
+        ("Qwen/Qwen3-Embedding-0.6B", "TestData/test_data_qwen3_embedding_0.6b.json"),
+        ("Qwen/Qwen3-Next-80B-A3B-Instruct", "TestData/test_data_qwen3_next_80b_a3b_instruct.json"),
+        ("Qwen/Qwen3-VL-30B-A3B-Instruct", "TestData/test_data_qwen3_vl_30b_a3b_instruct.json"),
+        ("Qwen/Qwen3-Reranker-0.6B", "TestData/test_data_qwen3_reranker_0.6b.json"),
     ];
 
     public static PythonGeneratedTestDataFile GetTestData(string fileName)

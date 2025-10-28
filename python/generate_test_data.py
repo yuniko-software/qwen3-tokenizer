@@ -49,6 +49,7 @@ def generate_test_cases() -> List[Dict[str, Any]]:
         {"name": "repeated_chars", "input": "aaaaaa bbbbbb cccccc", "add_eos": True},
         {"name": "url", "input": "Visit https://example.com for more info", "add_eos": True},
         {"name": "email", "input": "Contact us at test@example.com", "add_eos": True},
+        {"name": "all_special_tokens", "input": "<|endoftext|><|im_start|><|im_end|><|object_ref_start|><|object_ref_end|><|box_start|><|box_end|><|quad_start|><|quad_end|><|vision_start|><|vision_end|><|vision_pad|><|image_pad|><|video_pad|><tool_call></tool_call><|fim_prefix|><|fim_middle|><|fim_suffix|><|fim_pad|><|repo_name|><|file_sep|><tool_response></tool_response><think></think>", "add_eos": False},
     ]
 
     return test_cases
@@ -132,11 +133,11 @@ def generate_for_model(model_name: str, output_file: str):
 def main():
     """Main function to generate test data for one or more models."""
     models = [
-        ("Qwen/Qwen3-0.6B", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/test_data_qwen3_0.6b.json"),
-        ("Qwen/Qwen3-Embedding-0.6B", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/test_data_qwen3_embedding_0.6b.json"),
-        ("Qwen/Qwen3-Next-80B-A3B-Instruct", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/test_data_qwen3_next_80b_a3b_instruct.json"),
-        ("Qwen/Qwen3-VL-30B-A3B-Instruct", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/test_data_qwen3_vl_30b_a3b_instruct.json"),
-        ("Qwen/Qwen3-Reranker-0.6B", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/test_data_qwen3_reranker_0.6b.json"),
+        ("Qwen/Qwen3-0.6B", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_0.6b.json"),
+        ("Qwen/Qwen3-Embedding-0.6B", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_embedding_0.6b.json"),
+        ("Qwen/Qwen3-Next-80B-A3B-Instruct", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_next_80b_a3b_instruct.json"),
+        ("Qwen/Qwen3-VL-30B-A3B-Instruct", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_vl_30b_a3b_instruct.json"),
+        ("Qwen/Qwen3-Reranker-0.6B", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_reranker_0.6b.json"),
     ]
 
     if len(sys.argv) > 1:

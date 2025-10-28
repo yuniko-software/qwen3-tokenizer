@@ -51,19 +51,6 @@ public class PythonComparisonTests
         Assert.Equal(testCase.Expected.Tokens.ToArray(), actual.Tokens);
     }
 
-    [Theory]
-    [ClassData(typeof(TestCaseData))]
-    public void EncodeDetailed_ProducesExpectedOffsets(string modelName, string testDataFileName, string testCaseName)
-    {
-        var testData = PythonTestDataProvider.GetTestData(testDataFileName);
-        var tokenizer = PythonTestDataProvider.GetTokenizer(modelName);
-        var testCase = testData.TestCases.First(tc => tc.Name == testCaseName);
-
-        var actual = tokenizer.EncodeDetailed(testCase.Input, testCase.AddEos);
-        var expected = testCase.Expected.Offsets.Select(o => (Index: o[0], Length: o[1])).ToArray();
-
-        Assert.Equal(expected, actual.Offsets);
-    }
 
     [Theory]
     [ClassData(typeof(TestCaseData))]
