@@ -107,17 +107,15 @@ public partial class Qwen3Tokenizer
     /// <param name="cacheDir">Directory to cache downloaded files. If null, uses temporary directory.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
     /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
-    /// <param name="progress">Optional progress reporter for download operations.</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     public static Qwen3Tokenizer FromHuggingFace(
         string modelName = "Qwen/Qwen3-0.6B",
         string? cacheDir = null,
         Qwen3TokenizerOptions? options = null,
-        HttpClient? httpClient = null,
-        IProgress<DownloadProgress>? progress = null)
+        HttpClient? httpClient = null)
     {
         var provider = new HuggingFaceFileProvider(modelName, cacheDir, httpClient);
-        var (vocabPath, mergesPath) = provider.GetFiles(progress);
+        var (vocabPath, mergesPath) = provider.GetFiles();
         return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
     }
 
@@ -126,14 +124,12 @@ public partial class Qwen3Tokenizer
     /// </summary>
     /// <param name="fileProvider">The file provider to use for obtaining tokenizer files.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
-    /// <param name="progress">Optional progress reporter for download operations.</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     public static Qwen3Tokenizer FromProvider(
         ITokenizerFileProvider fileProvider,
-        Qwen3TokenizerOptions? options = null,
-        IProgress<DownloadProgress>? progress = null)
+        Qwen3TokenizerOptions? options = null)
     {
-        var (vocabPath, mergesPath) = fileProvider.GetFiles(progress);
+        var (vocabPath, mergesPath) = fileProvider.GetFiles();
         return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
     }
 
@@ -144,7 +140,6 @@ public partial class Qwen3Tokenizer
     /// <param name="cacheDir">Directory to cache downloaded files. If null, uses temporary directory.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
     /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
-    /// <param name="progress">Optional progress reporter for download operations.</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     public static async Task<Qwen3Tokenizer> FromHuggingFaceAsync(
@@ -152,11 +147,10 @@ public partial class Qwen3Tokenizer
         string? cacheDir = null,
         Qwen3TokenizerOptions? options = null,
         HttpClient? httpClient = null,
-        IProgress<DownloadProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
         var provider = new HuggingFaceFileProvider(modelName, cacheDir, httpClient);
-        var (vocabPath, mergesPath) = await provider.GetFilesAsync(progress, cancellationToken).ConfigureAwait(false);
+        var (vocabPath, mergesPath) = await provider.GetFilesAsync(cancellationToken).ConfigureAwait(false);
         return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
     }
 
@@ -165,16 +159,14 @@ public partial class Qwen3Tokenizer
     /// </summary>
     /// <param name="fileProvider">The file provider to use for obtaining tokenizer files.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
-    /// <param name="progress">Optional progress reporter for download operations.</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     public static async Task<Qwen3Tokenizer> FromProviderAsync(
         ITokenizerFileProvider fileProvider,
         Qwen3TokenizerOptions? options = null,
-        IProgress<DownloadProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        var (vocabPath, mergesPath) = await fileProvider.GetFilesAsync(progress, cancellationToken).ConfigureAwait(false);
+        var (vocabPath, mergesPath) = await fileProvider.GetFilesAsync(cancellationToken).ConfigureAwait(false);
         return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
     }
 
@@ -249,17 +241,6 @@ public partial class Qwen3Tokenizer
     }
 
     /// <summary>
-    /// Encodes a batch of texts.
-    /// </summary>
-    /// <param name="texts">Collection of texts to encode</param>
-    /// <param name="addEos">Whether to add EOS token at the end. Default is false to match HuggingFace behavior.</param>
-    /// <returns>Array of token ID arrays</returns>
-    public int[][] EncodeBatch(IEnumerable<string> texts, bool addEos = false)
-    {
-        return [.. texts.Select(text => Encode(text, addEos))];
-    }
-
-    /// <summary>
     /// Counts the number of tokens in the text without full encoding.
     /// </summary>
     /// <param name="text">Input text</param>
@@ -288,28 +269,28 @@ public partial class Qwen3Tokenizer
     }
 
     /// <summary>
-    /// Decodes a batch of token ID sequences.
+    /// Prepares inputs for ONNX Runtime inference with Qwen3 models.
     /// </summary>
-    public string[] DecodeBatch(IEnumerable<int[]> idsBatch, bool skipSpecialTokens = true)
+    /// <param name="text">Input text to encode</param>
+    /// <param name="maxLength">Maximum sequence length (will pad or truncate). Default is 512.</param>
+    /// <returns>ONNX inputs containing input_ids, attention_mask, and position_ids</returns>
+    /// <remarks>
+    /// Returns 1D arrays suitable for single-text inference.
+    /// Position IDs are calculated based on the attention mask (cumulative sum of non-padding positions).
+    /// Some models (e.g., embedding models) may not require position_ids - you can ignore this field if not needed.
+    /// For batch inference, call this method for each text and manually construct 2D arrays.
+    /// </remarks>
+    public OnnxInputs PrepareForOnnx(string text, int maxLength = 512)
     {
-        return [.. idsBatch.Select(ids => Decode(ids, skipSpecialTokens))];
+        var (inputIds, attentionMask) = PrepareInputArrays(text, maxLength);
+        var positionIds = CreatePositionIds(attentionMask);
+        return new OnnxInputs(inputIds, attentionMask, positionIds, SequenceLength: maxLength);
     }
 
     /// <summary>
-    /// Gets an added token ID by name.
+    /// Common logic for preparing input arrays with padding and truncation.
     /// </summary>
-    public int? GetAddedTokenId(string tokenName)
-    {
-        return _addedTokens.TryGetValue(tokenName, out var id) ? id : null;
-    }
-
-    /// <summary>
-    /// Prepares input for ONNX Runtime inference.
-    /// </summary>
-    /// <param name="text">Input text</param>
-    /// <param name="maxLength">Maximum sequence length (will pad or truncate)</param>
-    /// <returns>Tuple of (input_ids, attention_mask)</returns>
-    public (long[] InputIds, long[] AttentionMask) PrepareForOnnx(string text, int maxLength = 512)
+    private (long[] InputIds, long[] AttentionMask) PrepareInputArrays(string text, int maxLength)
     {
         var ids = Encode(text, addEos: true);
 
@@ -334,25 +315,26 @@ public partial class Qwen3Tokenizer
     }
 
     /// <summary>
-    /// Prepares a batch of texts for ONNX Runtime inference.
+    /// Creates position IDs based on attention mask (cumulative count of non-padding positions).
     /// </summary>
-    public (long[,] InputIds, long[,] AttentionMask) PrepareForOnnxBatch(string[] texts, int maxLength = 512)
+    private static long[] CreatePositionIds(long[] attentionMask)
     {
-        int batchSize = texts.Length;
-        var inputIds = new long[batchSize, maxLength];
-        var attentionMask = new long[batchSize, maxLength];
+        var positionIds = new long[attentionMask.Length];
+        long position = 0;
 
-        for (int i = 0; i < batchSize; i++)
+        for (int i = 0; i < attentionMask.Length; i++)
         {
-            var (ids, mask) = PrepareForOnnx(texts[i], maxLength);
-
-            for (int j = 0; j < maxLength; j++)
+            if (attentionMask[i] == 1)
             {
-                inputIds[i, j] = ids[j];
-                attentionMask[i, j] = mask[j];
+                positionIds[i] = position++;
+            }
+            else
+            {
+                // For padding tokens, keep position at 0 (or could use last valid position)
+                positionIds[i] = 0;
             }
         }
 
-        return (inputIds, attentionMask);
+        return positionIds;
     }
 }

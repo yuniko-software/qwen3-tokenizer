@@ -15,10 +15,12 @@ public class OnnxPreparationTests
     [InlineData("This is a longer sentence that will be truncated", 5)]
     public void PrepareForOnnx_ReturnsCorrectLength(string text, int maxLength)
     {
-        var (inputIds, attentionMask) = _tokenizer.PrepareForOnnx(text, maxLength);
+        var result = _tokenizer.PrepareForOnnx(text, maxLength);
 
-        Assert.Equal(maxLength, inputIds.Length);
-        Assert.Equal(maxLength, attentionMask.Length);
+        Assert.Equal(maxLength, result.InputIds.Length);
+        Assert.Equal(maxLength, result.AttentionMask.Length);
+        Assert.Equal(maxLength, result.PositionIds.Length);
+        Assert.Equal(maxLength, result.SequenceLength);
     }
 
     [Fact]
@@ -27,18 +29,18 @@ public class OnnxPreparationTests
         var text = "Hi";
         var maxLength = 10;
 
-        var (inputIds, attentionMask) = _tokenizer.PrepareForOnnx(text, maxLength);
+        var result = _tokenizer.PrepareForOnnx(text, maxLength);
 
         var tokenCount = _tokenizer.CountTokens(text, addEos: true);
 
         for (int i = 0; i < tokenCount; i++)
         {
-            Assert.Equal(1L, attentionMask[i]);
+            Assert.Equal(1L, result.AttentionMask[i]);
         }
 
         for (int i = tokenCount; i < maxLength; i++)
         {
-            Assert.Equal(0L, attentionMask[i]);
+            Assert.Equal(0L, result.AttentionMask[i]);
         }
     }
 
@@ -48,43 +50,37 @@ public class OnnxPreparationTests
         var text = "This is a very long sentence that will definitely exceed the maximum length limit";
         var maxLength = 5;
 
-        var (inputIds, attentionMask) = _tokenizer.PrepareForOnnx(text, maxLength);
+        var result = _tokenizer.PrepareForOnnx(text, maxLength);
 
-        Assert.Equal(maxLength, inputIds.Length);
-        Assert.All(attentionMask, mask => Assert.Equal(1L, mask));
+        Assert.Equal(maxLength, result.InputIds.Length);
+        Assert.All(result.AttentionMask, mask => Assert.Equal(1L, mask));
+
+        // All position IDs should be sequential when all tokens are real (non-padded), regardless of whether truncation occurred
+        for (int i = 0; i < maxLength; i++)
+        {
+            Assert.Equal(i, result.PositionIds[i]);
+        }
     }
 
     [Fact]
-    public void PrepareForOnnxBatch_ReturnsCorrectDimensions()
+    public void PrepareForOnnx_CreatesCorrectPositionIds()
     {
-        var texts = new[] { "First text", "Second text", "Third text" };
-        var maxLength = 15;
-
-        var (inputIds, attentionMask) = _tokenizer.PrepareForOnnxBatch(texts, maxLength);
-
-        Assert.Equal(texts.Length, inputIds.GetLength(0));
-        Assert.Equal(maxLength, inputIds.GetLength(1));
-        Assert.Equal(texts.Length, attentionMask.GetLength(0));
-        Assert.Equal(maxLength, attentionMask.GetLength(1));
-    }
-
-    [Fact]
-    public void PrepareForOnnxBatch_ProducesSameResultsAsIndividual()
-    {
-        var texts = new[] { "Hello", "World" };
+        var text = "Hello world";
         var maxLength = 10;
 
-        var (batchInputIds, batchAttentionMask) = _tokenizer.PrepareForOnnxBatch(texts, maxLength);
+        var result = _tokenizer.PrepareForOnnx(text, maxLength);
+        var tokenCount = _tokenizer.CountTokens(text, addEos: true);
 
-        for (int i = 0; i < texts.Length; i++)
+        // Position IDs should be sequential for real tokens
+        for (int i = 0; i < tokenCount; i++)
         {
-            var (individualInputIds, individualAttentionMask) = _tokenizer.PrepareForOnnx(texts[i], maxLength);
+            Assert.Equal(i, result.PositionIds[i]);
+        }
 
-            for (int j = 0; j < maxLength; j++)
-            {
-                Assert.Equal(individualInputIds[j], batchInputIds[i, j]);
-                Assert.Equal(individualAttentionMask[j], batchAttentionMask[i, j]);
-            }
+        // Position IDs should be 0 for padding tokens
+        for (int i = tokenCount; i < maxLength; i++)
+        {
+            Assert.Equal(0L, result.PositionIds[i]);
         }
     }
 }

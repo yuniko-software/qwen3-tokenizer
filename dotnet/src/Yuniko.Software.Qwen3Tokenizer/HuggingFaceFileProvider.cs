@@ -34,7 +34,7 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
     }
 
     /// <inheritdoc/>
-    public (string VocabPath, string MergesPath) GetFiles(IProgress<DownloadProgress>? progress = null)
+    public (string VocabPath, string MergesPath) GetFiles()
     {
         Directory.CreateDirectory(_cacheDir);
 
@@ -47,13 +47,13 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
             if (!File.Exists(vocabPath))
             {
                 var vocabUrl = _config.GetVocabUrl(_modelName);
-                DownloadFile(client, vocabUrl, vocabPath, progress);
+                DownloadFile(client, vocabUrl, vocabPath);
             }
 
             if (!File.Exists(mergesPath))
             {
                 var mergesUrl = _config.GetMergesUrl(_modelName);
-                DownloadFile(client, mergesUrl, mergesPath, progress);
+                DownloadFile(client, mergesUrl, mergesPath);
             }
 
             return (vocabPath, mergesPath);
@@ -69,7 +69,6 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
 
     /// <inheritdoc/>
     public async Task<(string VocabPath, string MergesPath)> GetFilesAsync(
-        IProgress<DownloadProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(_cacheDir);
@@ -83,13 +82,13 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
             if (!File.Exists(vocabPath))
             {
                 var vocabUrl = _config.GetVocabUrl(_modelName);
-                await DownloadFileAsync(client, vocabUrl, vocabPath, progress, cancellationToken);
+                await DownloadFileAsync(client, vocabUrl, vocabPath, cancellationToken);
             }
 
             if (!File.Exists(mergesPath))
             {
                 var mergesUrl = _config.GetMergesUrl(_modelName);
-                await DownloadFileAsync(client, mergesUrl, mergesPath, progress, cancellationToken);
+                await DownloadFileAsync(client, mergesUrl, mergesPath, cancellationToken);
             }
 
             return (vocabPath, mergesPath);
@@ -119,48 +118,31 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
     private static void DownloadFile(
         HttpClient client,
         string url,
-        string destinationPath,
-        IProgress<DownloadProgress>? progress)
+        string destinationPath)
     {
-        var fileName = Path.GetFileName(destinationPath);
-        progress?.Report(new DownloadProgress(fileName, 0, null, $"Starting download from {url}"));
-
         var response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).GetAwaiter().GetResult();
         response.EnsureSuccessStatusCode();
-
-        var totalBytes = response.Content.Headers.ContentLength;
 
         using var contentStream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
         using var fileStream = File.Create(destinationPath);
 
         var buffer = new byte[8192];
-        long bytesDownloaded = 0;
         int bytesRead;
 
         while ((bytesRead = contentStream.Read(buffer, 0, buffer.Length)) > 0)
         {
             fileStream.Write(buffer, 0, bytesRead);
-            bytesDownloaded += bytesRead;
-            progress?.Report(new DownloadProgress(fileName, bytesDownloaded, totalBytes, "Downloading"));
         }
-
-        progress?.Report(new DownloadProgress(fileName, bytesDownloaded, totalBytes, $"Downloaded to {destinationPath}"));
     }
 
     private static async Task DownloadFileAsync(
         HttpClient client,
         string url,
         string destinationPath,
-        IProgress<DownloadProgress>? progress,
         CancellationToken cancellationToken)
     {
-        var fileName = Path.GetFileName(destinationPath);
-        progress?.Report(new DownloadProgress(fileName, 0, null, $"Starting download from {url}"));
-
         var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
-
-        var totalBytes = response.Content.Headers.ContentLength;
 
         var tempPath = destinationPath + ".tmp";
 
@@ -170,14 +152,11 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
             using (var fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, useAsync: true))
             {
                 var buffer = new byte[8192];
-                long bytesDownloaded = 0;
                 int bytesRead;
 
                 while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
                 {
                     await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
-                    bytesDownloaded += bytesRead;
-                    progress?.Report(new DownloadProgress(fileName, bytesDownloaded, totalBytes, "Downloading"));
                 }
 
                 await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -185,7 +164,6 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
 
             // Only move temp file to destination if download completed successfully
             File.Move(tempPath, destinationPath, overwrite: true);
-            progress?.Report(new DownloadProgress(fileName, totalBytes ?? 0, totalBytes, $"Downloaded to {destinationPath}"));
         }
         catch
         {
