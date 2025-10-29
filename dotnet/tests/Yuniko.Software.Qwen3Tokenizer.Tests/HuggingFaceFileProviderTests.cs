@@ -38,9 +38,7 @@ public class HuggingFaceFileProviderTests : IDisposable
     {
         var provider = new HuggingFaceFileProvider("Qwen/Qwen3-0.6B", _tempDir);
 
-        try
-        { _ = provider.GetFiles(); }
-        catch { }
+        _ = provider.GetFiles();
 
         Assert.True(Directory.Exists(_tempDir));
     }
@@ -50,9 +48,7 @@ public class HuggingFaceFileProviderTests : IDisposable
     {
         var provider = new HuggingFaceFileProvider("Qwen/Qwen3-0.6B", _tempDir);
 
-        try
-        { _ = await provider.GetFilesAsync(); }
-        catch { }
+        _ = await provider.GetFilesAsync();
 
         Assert.True(Directory.Exists(_tempDir));
     }
@@ -99,7 +95,7 @@ public class HuggingFaceFileProviderTests : IDisposable
     public async Task GetFilesAsync_CanBeCancelled()
     {
         var provider = new HuggingFaceFileProvider("Qwen/Qwen3-0.6B", _tempDir);
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
@@ -164,9 +160,7 @@ public class HuggingFaceFileProviderTests : IDisposable
         {
             if (Directory.Exists(uniqueCacheDir))
             {
-                try
-                { Directory.Delete(uniqueCacheDir, recursive: true); }
-                catch { }
+                Directory.Delete(uniqueCacheDir, recursive: true);
             }
         }
     }

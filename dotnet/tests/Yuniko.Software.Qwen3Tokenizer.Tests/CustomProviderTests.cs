@@ -130,7 +130,7 @@ public class CustomProviderTests : IDisposable
     public async Task FromProviderAsync_SupportsCancellation()
     {
         var provider = new CancellableTestFileProvider();
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
