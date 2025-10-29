@@ -111,7 +111,7 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
 
         return new HttpClient
         {
-            Timeout = TimeSpan.FromMinutes(10)
+            Timeout = TimeSpan.FromMinutes(10),
         };
     }
 
@@ -148,8 +148,8 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
 
         try
         {
-            using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            using (var fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, useAsync: true))
+            await using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            await using (var fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, useAsync: true))
             {
                 var buffer = new byte[8192];
                 int bytesRead;

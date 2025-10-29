@@ -18,7 +18,7 @@ public class PythonComparisonTests
     {
         var testData = PythonTestDataProvider.GetTestData(testDataFileName);
         var tokenizer = PythonTestDataProvider.GetTokenizer(modelName);
-        var testCase = testData.TestCases.First(tc => tc.Name == testCaseName);
+        var testCase = testData.TestCases.Single(tc => string.Equals(tc.Name, testCaseName, StringComparison.InvariantCulture));
 
         var actual = tokenizer.Encode(testCase.Input, testCase.AddEos);
 
@@ -31,7 +31,7 @@ public class PythonComparisonTests
     {
         var testData = PythonTestDataProvider.GetTestData(testDataFileName);
         var tokenizer = PythonTestDataProvider.GetTokenizer(modelName);
-        var testCase = testData.TestCases.First(tc => tc.Name == testCaseName);
+        var testCase = testData.TestCases.Single(tc => string.Equals(tc.Name, testCaseName, StringComparison.InvariantCulture));
 
         var actual = tokenizer.EncodeDetailed(testCase.Input, testCase.AddEos);
 
@@ -44,13 +44,12 @@ public class PythonComparisonTests
     {
         var testData = PythonTestDataProvider.GetTestData(testDataFileName);
         var tokenizer = PythonTestDataProvider.GetTokenizer(modelName);
-        var testCase = testData.TestCases.First(tc => tc.Name == testCaseName);
+        var testCase = testData.TestCases.Single(tc => string.Equals(tc.Name, testCaseName, StringComparison.InvariantCulture));
 
         var actual = tokenizer.EncodeDetailed(testCase.Input, testCase.AddEos);
 
         Assert.Equal(testCase.Expected.Tokens.ToArray(), actual.Tokens);
     }
-
 
     [Theory]
     [ClassData(typeof(TestCaseData))]
@@ -58,7 +57,7 @@ public class PythonComparisonTests
     {
         var testData = PythonTestDataProvider.GetTestData(testDataFileName);
         var tokenizer = PythonTestDataProvider.GetTokenizer(modelName);
-        var testCase = testData.TestCases.First(tc => tc.Name == testCaseName);
+        var testCase = testData.TestCases.Single(tc => string.Equals(tc.Name, testCaseName, StringComparison.InvariantCulture));
 
         var actual = tokenizer.CountTokens(testCase.Input, testCase.AddEos);
 
@@ -71,7 +70,7 @@ public class PythonComparisonTests
     {
         var testData = PythonTestDataProvider.GetTestData(testDataFileName);
         var tokenizer = PythonTestDataProvider.GetTokenizer(modelName);
-        var testCase = testData.TestCases.First(tc => tc.Name == testCaseName);
+        var testCase = testData.TestCases.Single(tc => string.Equals(tc.Name, testCaseName, StringComparison.InvariantCulture));
 
         var actual = tokenizer.Decode([.. testCase.Expected.Ids], skipSpecialTokens: false);
 
@@ -84,7 +83,7 @@ public class PythonComparisonTests
     {
         var testData = PythonTestDataProvider.GetTestData(testDataFileName);
         var tokenizer = PythonTestDataProvider.GetTokenizer(modelName);
-        var testCase = testData.TestCases.First(tc => tc.Name == testCaseName);
+        var testCase = testData.TestCases.Single(tc => string.Equals(tc.Name, testCaseName, StringComparison.InvariantCulture));
 
         var actual = tokenizer.Decode([.. testCase.Expected.Ids], skipSpecialTokens: true);
 

@@ -54,7 +54,7 @@ public static class PythonTestDataProvider
 #pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
         var testData = JsonSerializer.Deserialize<PythonGeneratedTestDataFile>(json, new JsonSerializerOptions
         {
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true,
         }) ?? throw new InvalidOperationException($"Failed to load test data from {fileName}");
 #pragma warning restore CA1869 // Cache and reuse 'JsonSerializerOptions' instances
 

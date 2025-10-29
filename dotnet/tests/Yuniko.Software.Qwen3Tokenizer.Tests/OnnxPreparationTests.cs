@@ -26,8 +26,8 @@ public class OnnxPreparationTests
     [Fact]
     public void PrepareForOnnx_PadsShortSequences()
     {
-        var text = "Hi";
-        var maxLength = 10;
+        const string text = "Hi";
+        const int maxLength = 10;
 
         var result = _tokenizer.PrepareForOnnx(text, maxLength);
 
@@ -47,8 +47,8 @@ public class OnnxPreparationTests
     [Fact]
     public void PrepareForOnnx_TruncatesLongSequences()
     {
-        var text = "This is a very long sentence that will definitely exceed the maximum length limit";
-        var maxLength = 5;
+        const string text = "This is a very long sentence that will definitely exceed the maximum length limit";
+        const int maxLength = 5;
 
         var result = _tokenizer.PrepareForOnnx(text, maxLength);
 
@@ -65,8 +65,8 @@ public class OnnxPreparationTests
     [Fact]
     public void PrepareForOnnx_CreatesCorrectPositionIds()
     {
-        var text = "Hello world";
-        var maxLength = 10;
+        const string text = "Hello world";
+        const int maxLength = 10;
 
         var result = _tokenizer.PrepareForOnnx(text, maxLength);
         var tokenCount = _tokenizer.CountTokens(text, addEos: true);
