@@ -7,11 +7,10 @@ namespace Yuniko.Software.Qwen3Tokenizer;
 /// Based on byte-level BPE (Byte-Pair Encoding) similar to GPT-2.
 /// Supports all Qwen3 model variants including Embedding, General, Reranker, and Vision-Language models.
 /// </summary>
-public partial class Qwen3Tokenizer
+public sealed class Qwen3Tokenizer
 {
     private readonly BpeTokenizer _tokenizer;
     private readonly Dictionary<string, int> _addedTokens;
-    private readonly IReadOnlySet<int> _specialTokenIds;
     private readonly int _eosTokenId;
     private readonly int _padTokenId;
 
@@ -46,7 +45,7 @@ public partial class Qwen3Tokenizer
     /// Gets the token IDs marked as "special": true in HuggingFace.
     /// These are skipped during decoding when skipSpecialTokens=true.
     /// </summary>
-    public IReadOnlySet<int> SpecialTokenIds => _specialTokenIds;
+    public IReadOnlySet<int> SpecialTokenIds { get; }
 
     /// <summary>
     /// Creates a Qwen3 tokenizer from vocabulary and merges files.
@@ -70,7 +69,7 @@ public partial class Qwen3Tokenizer
         }
 
         _addedTokens = new Dictionary<string, int>(options.AddedTokens);
-        _specialTokenIds = options.SpecialTokenIds;
+        SpecialTokenIds = options.SpecialTokenIds;
         _eosTokenId = options.EosTokenId;
         _padTokenId = options.PadTokenId;
 
@@ -79,7 +78,7 @@ public partial class Qwen3Tokenizer
             ByteLevel = options.ByteLevel,
             Normalizer = options.Normalizer,
             PreTokenizer = new RegexPreTokenizer(options.PreTokenizerRegex, specialTokens: _addedTokens),
-            SpecialTokens = _addedTokens
+            SpecialTokens = _addedTokens,
         };
 
         _tokenizer = BpeTokenizer.Create(bpeOptions);
@@ -262,7 +261,7 @@ public partial class Qwen3Tokenizer
     {
         if (skipSpecialTokens)
         {
-            ids = [.. ids.Where(id => !_specialTokenIds.Contains(id))];
+            ids = [.. ids.Where(id => !SpecialTokenIds.Contains(id))];
         }
 
         return _tokenizer.Decode(ids) ?? string.Empty;

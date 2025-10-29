@@ -121,7 +121,7 @@ public static partial class Qwen3Tokens
         { ToolResponse, ToolResponseTokenId },
         { ToolResponseEnd, ToolResponseEndTokenId },
         { Think, ThinkTokenId },
-        { ThinkEnd, ThinkEndTokenId }
+        { ThinkEnd, ThinkEndTokenId },
     };
 
     /// <summary>
@@ -144,6 +144,6 @@ public static partial class Qwen3Tokens
         VisionEndTokenId,      // 151653
         VisionPadTokenId,      // 151654
         ImagePadTokenId,       // 151655
-        VideoPadTokenId        // 151656
+        VideoPadTokenId,        // 151656
     };
 }

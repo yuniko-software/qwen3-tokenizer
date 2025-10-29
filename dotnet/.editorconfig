@@ -96,6 +96,24 @@ csharp_style_pattern_matching_over_is_with_cast_check = true:error
 dotnet_diagnostic.CA1515.severity = none
 dotnet_diagnostic.CA2263.severity = none
 
+# MA0004: Use Task.ConfigureAwait
+dotnet_diagnostic.MA0004.severity = silent
+
+# RCS1173: Use coalesce expression instead of 'if'
+dotnet_diagnostic.RCS1173.severity = silent
+
+# MA0049: Type name should not match containing namespace
+dotnet_diagnostic.MA0049.severity = silent
+
+# MA0002: IEqualityComparer<string> or IComparer<string> is missing
+dotnet_diagnostic.MA0002.severity = silent
+
+# MA0009: Add regex evaluation timeout
+dotnet_diagnostic.MA0009.severity = silent
+
+# MA0048: File name must match type name
+dotnet_diagnostic.MA0048.severity = silent
+
 [*.{cs,vb}]
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
 dotnet_style_prefer_simplified_interpolation = true:suggestion
@@ -412,3 +430,6 @@ dotnet_style_predefined_type_for_locals_parameters_members = true:error
 tab_width = 4
 indent_size = 4
 end_of_line = crlf
+
+# Default severity for analyzer diagnostics with category 'Design'
+dotnet_analyzer_diagnostic.category-Design.severity = silent
