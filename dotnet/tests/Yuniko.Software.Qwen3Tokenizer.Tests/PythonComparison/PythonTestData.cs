@@ -31,6 +31,8 @@ public static class PythonTestDataProvider
 {
     private static readonly Dictionary<string, Qwen3Tokenizer> _tokenizerCache = [];
     private static readonly Dictionary<string, PythonGeneratedTestDataFile> _testDataCache = [];
+    private static readonly Lock _tokenizerLock = new();
+    private static readonly Lock _testDataLock = new();
 
     public static readonly (string ModelName, string TestDataFileName)[] Models =
     [
@@ -43,35 +45,41 @@ public static class PythonTestDataProvider
 
     public static PythonGeneratedTestDataFile GetTestData(string fileName)
     {
-        if (_testDataCache.TryGetValue(fileName, out var cached))
+        lock (_testDataLock)
         {
-            return cached;
-        }
+            if (_testDataCache.TryGetValue(fileName, out var cached))
+            {
+                return cached;
+            }
 
-        var path = Path.Combine(AppContext.BaseDirectory, fileName);
-        var json = File.ReadAllText(path);
+            var path = Path.Combine(AppContext.BaseDirectory, fileName);
+            var json = File.ReadAllText(path);
 
 #pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
-        var testData = JsonSerializer.Deserialize<PythonGeneratedTestDataFile>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-        }) ?? throw new InvalidOperationException($"Failed to load test data from {fileName}");
+            var testData = JsonSerializer.Deserialize<PythonGeneratedTestDataFile>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+            }) ?? throw new InvalidOperationException($"Failed to load test data from {fileName}");
 #pragma warning restore CA1869 // Cache and reuse 'JsonSerializerOptions' instances
 
-        _testDataCache[fileName] = testData;
-        return testData;
+            _testDataCache[fileName] = testData;
+            return testData;
+        }
     }
 
     public static Qwen3Tokenizer GetTokenizer(string modelName)
     {
-        if (_tokenizerCache.TryGetValue(modelName, out var cached))
+        lock (_tokenizerLock)
         {
-            return cached;
-        }
+            if (_tokenizerCache.TryGetValue(modelName, out var cached))
+            {
+                return cached;
+            }
 
-        var tokenizer = Qwen3Tokenizer.FromHuggingFace(modelName);
-        _tokenizerCache[modelName] = tokenizer;
-        return tokenizer;
+            var tokenizer = Qwen3Tokenizer.FromHuggingFace(modelName);
+            _tokenizerCache[modelName] = tokenizer;
+            return tokenizer;
+        }
     }
 
     public static IEnumerable<(string ModelName, string TestDataFileName)> GetAvailableModels()
