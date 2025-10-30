@@ -61,7 +61,11 @@ invoke_dotnet_checks() {
     pushd dotnet > /dev/null
 
     echo -e "${YELLOW}Verifying code formatting...${NC}"
-    dotnet format Yuniko.Software.Qwen3Tokenizer.slnx --verify-no-changes --verbosity diagnostic
+    if ! dotnet format Yuniko.Software.Qwen3Tokenizer.slnx --verify-no-changes --verbosity diagnostic; then
+        echo -e "${RED}ERROR: Code formatting issues detected!${NC}"
+        echo "Run 'dotnet format' to fix formatting issues."
+        exit 1
+    fi
     echo -e "${GREEN}Code formatting verified!${NC}"
 
     dotnet restore Yuniko.Software.Qwen3Tokenizer.slnx
