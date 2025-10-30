@@ -12,7 +12,7 @@ tab_width = 4
 
 # New line preferences
 end_of_line = lf
-insert_final_newline = false
+insert_final_newline = true
 
 #### .NET Coding Conventions ####
 
@@ -386,26 +386,6 @@ dotnet_diagnostic.IDE0046.severity = none
 # IDE0290: Use primary constructor
 dotnet_diagnostic.IDE0290.severity = none
 
-# SonarAnalyzer.CSharp rules
-
-# S112: General or reserved exceptions should never be thrown
-dotnet_diagnostic.S112.severity = none
-
-# S2094: Utility classes should not have public constructors
-dotnet_diagnostic.S1118.severity = none
-
-# S2094: Classes should not be empty
-dotnet_diagnostic.S2094.severity = none
-
-# S2365: Properties should not make collection or array copies
-dotnet_diagnostic.S2365.severity = none
-
-# S3267: Loops should be simplified with "LINQ" expressions
-dotnet_diagnostic.S3267.severity = none
-
-# S4136: Method overloads should be grouped together
-dotnet_diagnostic.S4136.severity = none
-
 # S6605: Collection-specific "Exists" method should be used instead of the "Any" extension
 dotnet_diagnostic.S6605.severity = none
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
@@ -427,9 +407,6 @@ dotnet_style_qualification_for_property = false:error
 dotnet_style_qualification_for_method = false:error
 dotnet_style_qualification_for_event = false:error
 dotnet_style_predefined_type_for_locals_parameters_members = true:error
-tab_width = 4
-indent_size = 4
-end_of_line = crlf
 
 # Default severity for analyzer diagnostics with category 'Design'
 dotnet_analyzer_diagnostic.category-Design.severity = silent

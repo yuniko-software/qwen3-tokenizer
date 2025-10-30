@@ -10,6 +10,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ML.Tokenizers" />
+	<PackageReference Include="Roslynator.Analyzers" PrivateAssets="All" />
+	<PackageReference Include="Meziantou.Analyzer" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
