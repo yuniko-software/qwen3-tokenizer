@@ -7,6 +7,7 @@ expected tokenization outputs that will be used to validate the C# implementatio
 
 import json
 import sys
+from pathlib import Path
 from typing import List, Dict, Any
 from transformers import AutoTokenizer
 
@@ -121,6 +122,9 @@ def generate_for_model(model_name: str, output_file: str):
         "pad_token_id": tokenizer.pad_token_id,
         "test_cases": results,
     }
+
+    output_path = Path(output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(output_data, f, indent=2, ensure_ascii=False)
