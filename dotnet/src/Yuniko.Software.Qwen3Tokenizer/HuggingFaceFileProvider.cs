@@ -1,5 +1,8 @@
 namespace Yuniko.Software.Qwen3Tokenizer;
 
+/// <summary>
+/// Provides tokenizer files by downloading from HuggingFace model hub.
+/// </summary>
 public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
 {
     private readonly string _modelName;
@@ -9,6 +12,13 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
     private readonly HuggingFaceConfig _config;
     private readonly SemaphoreSlim _downloadLock = new(1, 1);
 
+    /// <summary>
+    /// Creates a new HuggingFace file provider.
+    /// </summary>
+    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-0.6B", "Qwen/Qwen3-VL-30B-A3B-Instruct").</param>
+    /// <param name="cacheDir">Directory to cache downloaded files. If null, uses temporary directory.</param>
+    /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
+    /// <param name="config">Configuration for HuggingFace downloads. If null, uses HuggingFaceConfig.Default.</param>
     public HuggingFaceFileProvider(
         string modelName,
         string? cacheDir = null,
@@ -24,11 +34,22 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
         _config = config ?? HuggingFaceConfig.Default;
     }
 
+    /// <summary>
+    /// Gets the tokenizer files (vocab and merges) synchronously, downloading them if necessary.
+    /// Thread-safe: uses internal locking to prevent concurrent downloads.
+    /// </summary>
+    /// <returns>Tuple containing paths to the vocabulary and merges files.</returns>
     public (string VocabPath, string MergesPath) GetFiles()
     {
         return GetFilesAsync().ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
+    /// <summary>
+    /// Gets the tokenizer files (vocab and merges) asynchronously, downloading them if necessary.
+    /// Thread-safe: uses internal locking to prevent concurrent downloads.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token to cancel the download operation.</param>
+    /// <returns>Task containing tuple with paths to the vocabulary and merges files.</returns>
     public async Task<(string VocabPath, string MergesPath)> GetFilesAsync(
         CancellationToken cancellationToken = default)
     {
