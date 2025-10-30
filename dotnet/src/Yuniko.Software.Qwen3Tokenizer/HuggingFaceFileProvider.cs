@@ -96,7 +96,7 @@ public sealed class HuggingFaceFileProvider : ITokenizerFileProvider
 
         response.EnsureSuccessStatusCode();
 
-        var tempPath = destinationPath + ".tmp";
+        var tempPath = destinationPath + $".tmp.{Guid.NewGuid():N}";
 
         try
         {
