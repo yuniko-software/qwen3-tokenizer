@@ -31,8 +31,8 @@ public static class PythonTestDataProvider
 {
     private static readonly Dictionary<string, Qwen3Tokenizer> _tokenizerCache = [];
     private static readonly Dictionary<string, PythonGeneratedTestDataFile> _testDataCache = [];
-    private static readonly object _tokenizerLock = new();
-    private static readonly object _testDataLock = new();
+    private static readonly Lock _tokenizerLock = new();
+    private static readonly Lock _testDataLock = new();
 
     public static readonly (string ModelName, string TestDataFileName)[] Models =
     [
