@@ -18,7 +18,7 @@
     <PackageProjectUrl>https://github.com/yuniko-software/qwen3-tokenizer</PackageProjectUrl>
     <RepositoryUrl>https://github.com/yuniko-software/qwen3-tokenizer</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>qwen3;ml;embedding-models;huggingface;bpe-tokenizer;inference;vector-database;llm</PackageTags>
+    <PackageTags>qwen3;ml;embedding-models;huggingface;bpe-tokenizer;inference;vector-database;llm;tokenizer;nlp</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>https://github.com/yuniko-software/qwen3-tokenizer/releases</PackageReleaseNotes>
