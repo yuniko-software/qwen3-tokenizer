@@ -13,7 +13,7 @@ public class ModelNameValidationTests
     {
         var exception = Record.Exception(() => Qwen3Tokenizer.FromHuggingFace(modelName));
 
-        Assert.True(exception is null or not ArgumentException, 
+        Assert.True(exception is null or not ArgumentException,
             $"Should not throw ArgumentException for valid Qwen3 model name: {modelName}");
     }
 
