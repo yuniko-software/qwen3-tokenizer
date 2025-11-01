@@ -6,8 +6,6 @@ RED='\033[0;31m'
 YELLOW='\033[0;33m'
 NC='\033[0m'
 
-LANGUAGE="${1:-all}"
-
 check_python() {
     if ! command -v python3 &> /dev/null; then
         echo -e "${RED}ERROR: python3 command not found!${NC}"
@@ -58,8 +56,6 @@ invoke_dotnet_checks() {
 
     echo "Found .NET: $(dotnet --version)"
 
-    pushd dotnet > /dev/null
-
     echo -e "${YELLOW}Verifying code formatting...${NC}"
     if ! dotnet format Yuniko.Software.Qwen3Tokenizer.slnx --verify-no-changes --verbosity diagnostic; then
         echo -e "${RED}ERROR: Code formatting issues detected!${NC}"
@@ -72,8 +68,6 @@ invoke_dotnet_checks() {
     dotnet build Yuniko.Software.Qwen3Tokenizer.slnx --no-restore --configuration Release
     dotnet test Yuniko.Software.Qwen3Tokenizer.slnx --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
 
-    popd > /dev/null
-
     echo -e "${GREEN}All .NET checks passed!${NC}"
 }
 
@@ -83,10 +77,8 @@ echo ""
 generate_test_data
 echo ""
 
-if [ "$LANGUAGE" = "all" ] || [ "$LANGUAGE" = "dotnet" ]; then
-    invoke_dotnet_checks
-    echo ""
-fi
+invoke_dotnet_checks
+echo ""
 
 echo -e "${GREEN}All checks and tests passed successfully!${NC}"
 exit 0

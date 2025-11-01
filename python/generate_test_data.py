@@ -137,16 +137,16 @@ def generate_for_model(model_name: str, output_file: str):
 def main():
     """Main function to generate test data for one or more models."""
     models = [
-        ("Qwen/Qwen3-0.6B", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_0.6b.json"),
-        ("Qwen/Qwen3-Embedding-0.6B", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_embedding_0.6b.json"),
-        ("Qwen/Qwen3-Next-80B-A3B-Instruct", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_next_80b_a3b_instruct.json"),
-        ("Qwen/Qwen3-VL-30B-A3B-Instruct", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_vl_30b_a3b_instruct.json"),
-        ("Qwen/Qwen3-Reranker-0.6B", "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_reranker_0.6b.json"),
+        ("Qwen/Qwen3-0.6B", "../tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_0.6b.json"),
+        ("Qwen/Qwen3-Embedding-0.6B", "../tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_embedding_0.6b.json"),
+        ("Qwen/Qwen3-Next-80B-A3B-Instruct", "../tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_next_80b_a3b_instruct.json"),
+        ("Qwen/Qwen3-VL-30B-A3B-Instruct", "../tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_vl_30b_a3b_instruct.json"),
+        ("Qwen/Qwen3-Reranker-0.6B", "../tests/Yuniko.Software.Qwen3Tokenizer.Tests/TestData/test_data_qwen3_reranker_0.6b.json"),
     ]
 
     if len(sys.argv) > 1:
         model_arg = sys.argv[1]
-        output_file = "../dotnet/tests/Yuniko.Software.Qwen3Tokenizer.Tests/test_data.json"
+        output_file = "../tests/Yuniko.Software.Qwen3Tokenizer.Tests/test_data.json"
         generate_for_model(model_arg, output_file)
     else:
         for model_name, output_file in models:

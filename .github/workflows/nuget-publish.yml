@@ -7,7 +7,6 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    if: startsWith(github.event.release.tag_name, 'dotnet')
 
     steps:
     - name: Checkout code
@@ -35,16 +34,16 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore dotnet/Yuniko.Software.Qwen3Tokenizer.slnx
+      run: dotnet restore Yuniko.Software.Qwen3Tokenizer.slnx
 
     - name: Build
-      run: dotnet build dotnet/Yuniko.Software.Qwen3Tokenizer.slnx --configuration Release --no-restore
+      run: dotnet build Yuniko.Software.Qwen3Tokenizer.slnx --configuration Release --no-restore
 
     - name: Run tests
-      run: dotnet test dotnet/Yuniko.Software.Qwen3Tokenizer.slnx --configuration Release --no-build --verbosity normal
+      run: dotnet test Yuniko.Software.Qwen3Tokenizer.slnx --configuration Release --no-build --verbosity normal
 
     - name: Pack
-      run: dotnet pack dotnet/src/Yuniko.Software.Qwen3Tokenizer/Yuniko.Software.Qwen3Tokenizer.csproj --configuration Release --no-build --output ./artifacts
+      run: dotnet pack src/Yuniko.Software.Qwen3Tokenizer/Yuniko.Software.Qwen3Tokenizer.csproj --configuration Release --no-build --output ./artifacts -p:PackageReleaseNotes="${{ github.event.release.body }}"
 
     - name: Publish to NuGet
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
