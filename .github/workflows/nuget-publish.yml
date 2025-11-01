@@ -2,53 +2,53 @@ name: Publish to NuGet
 
 on:
   release:
-    types: [published]
+    types: [ published ]
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     if: startsWith(github.event.release.tag_name, 'dotnet')
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
         python-version: '3.11'
         cache: 'pip'
         cache-dependency-path: 'python/requirements.txt'
-    
+
     - name: Install Python dependencies
       run: pip install -r python/requirements.txt
-    
+
     - name: Generate test data
       run: |
         cd python
         python3 generate_test_data.py
         cd ..
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
-        
+
     - name: Restore dependencies
       run: dotnet restore dotnet/Yuniko.Software.Qwen3Tokenizer.slnx
-      
+
     - name: Build
       run: dotnet build dotnet/Yuniko.Software.Qwen3Tokenizer.slnx --configuration Release --no-restore
-      
+
     - name: Run tests
       run: dotnet test dotnet/Yuniko.Software.Qwen3Tokenizer.slnx --configuration Release --no-build --verbosity normal
-      
+
     - name: Pack
-      run: dotnet pack dotnet/src/Yuniko.Software.Qwen3Tokenizer/Yuniko.Software.Qwen3Tokenizer.csproj --configuration Release --no-build --output ./artifacts -p:PackageReleaseNotes="${{ github.event.release.body }}"
-      
+      run: dotnet pack dotnet/src/Yuniko.Software.Qwen3Tokenizer/Yuniko.Software.Qwen3Tokenizer.csproj --configuration Release --no-build --output ./artifacts
+
     - name: Publish to NuGet
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-      
+
     - name: Upload package artifact
       uses: actions/upload-artifact@v4
       with:
