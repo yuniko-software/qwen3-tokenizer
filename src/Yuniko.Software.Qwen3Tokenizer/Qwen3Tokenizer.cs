@@ -107,12 +107,14 @@ public sealed class Qwen3Tokenizer
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
     /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
+    /// <exception cref="ArgumentException">Thrown when model name does not contain 'qwen3' (case-insensitive).</exception>
     public static Qwen3Tokenizer FromHuggingFace(
         string modelName = "Qwen/Qwen3-0.6B",
         string? cacheDir = null,
         Qwen3TokenizerOptions? options = null,
         HttpClient? httpClient = null)
     {
+        ValidateQwen3ModelName(modelName);
         var provider = new HuggingFaceFileProvider(modelName, cacheDir, httpClient);
         var (vocabPath, mergesPath) = provider.GetFiles();
         return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
@@ -141,6 +143,7 @@ public sealed class Qwen3Tokenizer
     /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
+    /// <exception cref="ArgumentException">Thrown when model name does not contain 'qwen3' (case-insensitive).</exception>
     public static async Task<Qwen3Tokenizer> FromHuggingFaceAsync(
         string modelName = "Qwen/Qwen3-0.6B",
         string? cacheDir = null,
@@ -148,6 +151,7 @@ public sealed class Qwen3Tokenizer
         HttpClient? httpClient = null,
         CancellationToken cancellationToken = default)
     {
+        ValidateQwen3ModelName(modelName);
         var provider = new HuggingFaceFileProvider(modelName, cacheDir, httpClient);
         var (vocabPath, mergesPath) = await provider.GetFilesAsync(cancellationToken).ConfigureAwait(false);
         return new Qwen3Tokenizer(vocabPath, mergesPath, options ?? Qwen3TokenizerOptions.Default);
@@ -335,5 +339,26 @@ public sealed class Qwen3Tokenizer
         }
 
         return positionIds;
+    }
+
+    /// <summary>
+    /// Validates that the model name contains 'qwen3' (case-insensitive).
+    /// </summary>
+    /// <param name="modelName">The model name to validate.</param>
+    /// <exception cref="ArgumentException">Thrown when model name does not contain 'qwen3'.</exception>
+    private static void ValidateQwen3ModelName(string modelName)
+    {
+        if (string.IsNullOrWhiteSpace(modelName))
+        {
+            throw new ArgumentException("Model name cannot be null or empty.", nameof(modelName));
+        }
+
+        if (!modelName.Contains("qwen3", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                $"Model name '{modelName}' does not appear to be a Qwen3 model. " +
+                "Expected model name to contain 'qwen3' (e.g., 'Qwen/Qwen3-0.6B', 'Qwen/Qwen3-Embedding-8B').",
+                nameof(modelName));
+        }
     }
 }

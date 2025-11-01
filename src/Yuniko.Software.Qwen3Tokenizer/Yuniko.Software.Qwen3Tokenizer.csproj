@@ -12,11 +12,11 @@
     <Authors>Yuniko Software</Authors>
     <Company>Yuniko Software</Company>
     <Product>Qwen3 Tokenizer</Product>
-    <Description>Multi-language tokenizer implementation for Qwen3 models. Lightweight byte-pair encoding for C#/.NET</Description>
+    <Description>Native .NET tokenizer implementation for Qwen3 models. Lightweight byte-pair encoding with HuggingFace integration</Description>
     <Copyright>Copyright (c) 2025 Yuniko Software</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/yuniko-software/qwen3-tokenizer</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/yuniko-software/qwen3-tokenizer</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/yuniko-software/qwen3-tokenizer-dotnet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/yuniko-software/qwen3-tokenizer-dotnet</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>qwen3;ml;embedding-models;huggingface;bpe-tokenizer;inference;vector-database;llm;tokenizer;nlp</PackageTags>
     <PackageIcon>icon.png</PackageIcon>

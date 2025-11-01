@@ -1,7 +1,3 @@
-param(
-    [string]$Language = "all"
-)
-
 $ErrorActionPreference = "Stop"
 
 function Write-Green {
@@ -88,36 +84,31 @@ function Invoke-DotNetChecks {
         throw
     }
 
-    Push-Location "dotnet"
-    try {
-        Write-Yellow "Verifying code formatting..."
-        dotnet format Yuniko.Software.Qwen3Tokenizer.slnx --verify-no-changes --verbosity diagnostic
-        if ($LASTEXITCODE -ne 0) {
-            Write-Red "ERROR: Code formatting issues detected!"
-            Write-Host "Run 'dotnet format' to fix formatting issues."
-            throw "Code formatting check failed"
-        }
-        Write-Green "Code formatting verified!"
-
-        dotnet restore Yuniko.Software.Qwen3Tokenizer.slnx
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to restore .NET dependencies"
-        }
-
-        dotnet build Yuniko.Software.Qwen3Tokenizer.slnx --no-restore --configuration Release
-        if ($LASTEXITCODE -ne 0) {
-            throw "Failed to build .NET solution"
-        }
-
-        dotnet test Yuniko.Software.Qwen3Tokenizer.slnx --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
-        if ($LASTEXITCODE -ne 0) {
-            throw ".NET tests failed"
-        }
-
-        Write-Green "All .NET checks passed!"
-    } finally {
-        Pop-Location
+    Write-Yellow "Verifying code formatting..."
+    dotnet format Yuniko.Software.Qwen3Tokenizer.slnx --verify-no-changes --verbosity diagnostic
+    if ($LASTEXITCODE -ne 0) {
+        Write-Red "ERROR: Code formatting issues detected!"
+        Write-Host "Run 'dotnet format' to fix formatting issues."
+        throw "Code formatting check failed"
     }
+    Write-Green "Code formatting verified!"
+
+    dotnet restore Yuniko.Software.Qwen3Tokenizer.slnx
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to restore .NET dependencies"
+    }
+
+    dotnet build Yuniko.Software.Qwen3Tokenizer.slnx --no-restore --configuration Release
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to build .NET solution"
+    }
+
+    dotnet test Yuniko.Software.Qwen3Tokenizer.slnx --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
+    if ($LASTEXITCODE -ne 0) {
+        throw ".NET tests failed"
+    }
+
+    Write-Green "All .NET checks passed!"
 }
 
 Write-Yellow "Starting Qwen3 Tokenizer test suite"
@@ -127,10 +118,8 @@ try {
     Generate-TestData
     Write-Host ""
 
-    if ($Language -eq "all" -or $Language -eq "dotnet") {
-        Invoke-DotNetChecks
-        Write-Host ""
-    }
+    Invoke-DotNetChecks
+    Write-Host ""
 
     Write-Green "All checks and tests passed successfully!"
     exit 0
