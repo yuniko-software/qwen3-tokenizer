@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -31,6 +33,30 @@ jobs:
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '10.0.x'
+
+    - name: Check version bump on PR
+      if: github.event_name == 'pull_request'
+      run: |
+        CURRENT_VERSION=$(grep '<Version>' dotnet/src/Yuniko.Software.Qwen3Tokenizer/Yuniko.Software.Qwen3Tokenizer.csproj | sed -n 's/.*<Version>\(.*\)<\/Version>.*/\1/p' | tr -d '[:space:]')
+        git fetch origin main
+        MAIN_VERSION=$(git show origin/main:dotnet/src/Yuniko.Software.Qwen3Tokenizer/Yuniko.Software.Qwen3Tokenizer.csproj | grep '<Version>' | sed -n 's/.*<Version>\(.*\)<\/Version>.*/\1/p' | tr -d '[:space:]')
+        echo "Current branch version: $CURRENT_VERSION"
+        echo "Main branch version: $MAIN_VERSION"
+        DOTNET_CHANGES=$(git diff --name-only origin/main...HEAD | grep -E '^dotnet/(src|tests)/.*\.(cs|csproj)$' || true)
+        if [ -n "$DOTNET_CHANGES" ]; then
+          echo ".NET code changes detected:"
+          echo "$DOTNET_CHANGES"
+          if [ "$CURRENT_VERSION" == "$MAIN_VERSION" ]; then
+            echo "ERROR: .NET code was modified but version was not bumped!"
+            echo "Current version: $CURRENT_VERSION"
+            echo "Please update the <Version> in dotnet/src/Yuniko.Software.Qwen3Tokenizer/Yuniko.Software.Qwen3Tokenizer.csproj"
+            exit 1
+          else
+            echo "Version was bumped from $MAIN_VERSION to $CURRENT_VERSION"
+          fi
+        else
+          echo "No .NET source code changes detected, version bump not required"
+        fi
 
     - name: Make run_tests.sh executable
       run: chmod +x run_tests.sh
