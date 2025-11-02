@@ -5,7 +5,7 @@ namespace Yuniko.Software.Qwen3Tokenizer;
 
 /// <summary>
 /// Normalizer that applies Unicode NFC (Canonical Decomposition followed by Canonical Composition) normalization.
-/// This is used by Qwen tokenizers to normalize text before tokenization.
+/// Used by Qwen tokenizers to normalize text before tokenization.
 /// </summary>
 internal sealed class NfcNormalizer : Normalizer
 {
