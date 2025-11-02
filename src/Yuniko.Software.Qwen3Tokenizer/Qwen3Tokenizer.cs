@@ -3,9 +3,8 @@
 namespace Yuniko.Software.Qwen3Tokenizer;
 
 /// <summary>
-/// Tokenizer for Qwen3 models.
-/// Based on byte-level BPE (Byte-Pair Encoding) similar to GPT-2.
-/// Supports all Qwen3 model variants including Embedding, General, Reranker, and Vision-Language models.
+/// Tokenizer for Qwen3 models using byte-level BPE (Byte-Pair Encoding).
+/// Supports all Qwen3 model variants including LLM, Embedding, Reranker, and Vision-Language models.
 /// </summary>
 public sealed class Qwen3Tokenizer
 {
@@ -50,8 +49,8 @@ public sealed class Qwen3Tokenizer
     /// <summary>
     /// Creates a Qwen3 tokenizer from vocabulary and merges files.
     /// </summary>
-    /// <param name="vocabPath">Path to vocab.json file</param>
-    /// <param name="mergesPath">Path to merges.txt file</param>
+    /// <param name="vocabPath">Path to vocab.json file.</param>
+    /// <param name="mergesPath">Path to merges.txt file.</param>
     /// <param name="options">Tokenizer configuration options.</param>
     private Qwen3Tokenizer(
         string vocabPath,
@@ -85,10 +84,10 @@ public sealed class Qwen3Tokenizer
     }
 
     /// <summary>
-    /// Creates a Qwen3 tokenizer directly from local vocabulary and merges files.
+    /// Creates a Qwen3 tokenizer from local vocabulary and merges files.
     /// </summary>
-    /// <param name="vocabPath">Path to vocab.json file</param>
-    /// <param name="mergesPath">Path to merges.txt file</param>
+    /// <param name="vocabPath">Path to vocab.json file.</param>
+    /// <param name="mergesPath">Path to merges.txt file.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     public static Qwen3Tokenizer FromFiles(
@@ -102,10 +101,10 @@ public sealed class Qwen3Tokenizer
     /// <summary>
     /// Downloads tokenizer files from HuggingFace and creates a Qwen3 tokenizer.
     /// </summary>
-    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-0.6B", "Qwen/Qwen3-Embedding-0.6B", "Qwen/Qwen3-VL-30B-A3B-Instruct")</param>
+    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-0.6B", "Qwen/Qwen3-Embedding-0.6B", "Qwen/Qwen3-VL-30B-A3B-Instruct").</param>
     /// <param name="cacheDir">Directory to cache downloaded files. If null, uses temporary directory.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
-    /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
+    /// <param name="httpClient">HttpClient to use for downloads. If null, creates a new one.</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     /// <exception cref="ArgumentException">Thrown when model name does not contain 'qwen3' (case-insensitive).</exception>
     public static Qwen3Tokenizer FromHuggingFace(
@@ -137,11 +136,11 @@ public sealed class Qwen3Tokenizer
     /// <summary>
     /// Asynchronously downloads tokenizer files from HuggingFace and creates a Qwen3 tokenizer.
     /// </summary>
-    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-0.6B", "Qwen/Qwen3-Embedding-0.6B", "Qwen/Qwen3-VL-30B-A3B-Instruct")</param>
+    /// <param name="modelName">Model name (e.g., "Qwen/Qwen3-0.6B", "Qwen/Qwen3-Embedding-0.6B", "Qwen/Qwen3-VL-30B-A3B-Instruct").</param>
     /// <param name="cacheDir">Directory to cache downloaded files. If null, uses temporary directory.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
-    /// <param name="httpClient">Optional HttpClient to use for downloads. If null, creates a new one.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="httpClient">HttpClient to use for downloads. If null, creates a new one.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     /// <exception cref="ArgumentException">Thrown when model name does not contain 'qwen3' (case-insensitive).</exception>
     public static async Task<Qwen3Tokenizer> FromHuggingFaceAsync(
@@ -162,7 +161,7 @@ public sealed class Qwen3Tokenizer
     /// </summary>
     /// <param name="fileProvider">The file provider to use for obtaining tokenizer files.</param>
     /// <param name="options">Tokenizer configuration options. If null, uses Qwen3TokenizerOptions.Default.</param>
-    /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A new Qwen3Tokenizer instance.</returns>
     public static async Task<Qwen3Tokenizer> FromProviderAsync(
         ITokenizerFileProvider fileProvider,
@@ -176,9 +175,9 @@ public sealed class Qwen3Tokenizer
     /// <summary>
     /// Encodes text into token IDs.
     /// </summary>
-    /// <param name="text">Input text to tokenize</param>
+    /// <param name="text">Input text to tokenize.</param>
     /// <param name="addEos">Whether to add EOS token at the end. Default is false to match HuggingFace behavior.</param>
-    /// <returns>Array of token IDs</returns>
+    /// <returns>Array of token IDs.</returns>
     public int[] Encode(string text, bool addEos = false)
     {
         IReadOnlyList<int> ids = _tokenizer.EncodeToIds(text);
@@ -211,12 +210,12 @@ public sealed class Qwen3Tokenizer
     /// <summary>
     /// Encodes text and returns detailed encoding information.
     /// </summary>
-    /// <param name="text">Input text to tokenize</param>
+    /// <param name="text">Input text to tokenize.</param>
     /// <param name="addEos">Whether to add EOS token at the end. Default is false to match HuggingFace behavior.</param>
-    /// <returns>Detailed encoding result with token IDs, strings, and offsets (in UTF-16 char indices)</returns>
+    /// <returns>Detailed encoding result with token IDs, strings, and offsets (in UTF-16 char indices).</returns>
     /// <remarks>
     /// Offsets are returned as UTF-16 char indices (matching C# string indexing).
-    /// Note that emojis and other characters outside the Basic Multilingual Plane use 2 UTF-16 code units (surrogate pairs).
+    /// Emojis and other characters outside the Basic Multilingual Plane use 2 UTF-16 code units (surrogate pairs).
     /// </remarks>
     public EncodingResult EncodeDetailed(string text, bool addEos = false)
     {
@@ -246,9 +245,9 @@ public sealed class Qwen3Tokenizer
     /// <summary>
     /// Counts the number of tokens in the text without full encoding.
     /// </summary>
-    /// <param name="text">Input text</param>
+    /// <param name="text">Input text.</param>
     /// <param name="addEos">Whether to add EOS token at the end. Default is false to match HuggingFace behavior.</param>
-    /// <returns>Token count</returns>
+    /// <returns>Token count.</returns>
     public int CountTokens(string text, bool addEos = false)
     {
         int count = _tokenizer.CountTokens(text);
@@ -258,9 +257,9 @@ public sealed class Qwen3Tokenizer
     /// <summary>
     /// Decodes token IDs back to text.
     /// </summary>
-    /// <param name="ids">Token IDs to decode</param>
-    /// <param name="skipSpecialTokens">Whether to skip special tokens in output (only skips tokens marked as "special": true)</param>
-    /// <returns>Decoded text</returns>
+    /// <param name="ids">Token IDs to decode.</param>
+    /// <param name="skipSpecialTokens">Whether to skip special tokens in output (only skips tokens marked as "special": true).</param>
+    /// <returns>Decoded text.</returns>
     public string Decode(int[] ids, bool skipSpecialTokens = true)
     {
         if (skipSpecialTokens)
@@ -274,14 +273,14 @@ public sealed class Qwen3Tokenizer
     /// <summary>
     /// Prepares inputs for ONNX Runtime inference with Qwen3 models.
     /// </summary>
-    /// <param name="text">Input text to encode</param>
+    /// <param name="text">Input text to encode.</param>
     /// <param name="maxLength">Maximum sequence length (will pad or truncate). Default is 512.</param>
-    /// <returns>ONNX inputs containing input_ids, attention_mask, and position_ids</returns>
+    /// <returns>ONNX inputs containing input_ids, attention_mask, and position_ids.</returns>
     /// <remarks>
-    /// Returns 1D arrays suitable for single-text inference.
+    /// Returns 1D arrays for single-text inference.
     /// Position IDs are calculated based on the attention mask (cumulative sum of non-padding positions).
-    /// Some models (e.g., embedding models) may not require position_ids - you can ignore this field if not needed.
-    /// For batch inference, call this method for each text and manually construct 2D arrays.
+    /// Some models (e.g., embedding models) may not require position_ids.
+    /// For batch inference, call this method for each text and construct 2D arrays manually.
     /// </remarks>
     public OnnxInputs PrepareForOnnx(string text, int maxLength = 512)
     {
