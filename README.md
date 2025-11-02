@@ -84,7 +84,7 @@ string withoutSpecial = tokenizer.Decode(tokens, skipSpecialTokens: true);
 // Get detailed information about tokens
 var result = tokenizer.EncodeDetailed("Hello, world!");
 
-foreach (int i = 0; i < result.Ids.Length; i++)
+for (int i = 0; i < result.Ids.Length; i++)
 {
     Console.WriteLine($"Token: '{result.Tokens[i]}' | ID: {result.Ids[i]} | " +
                      $"Offset: {result.Offsets[i].Index}, Length: {result.Offsets[i].Length}");
