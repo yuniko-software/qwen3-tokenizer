@@ -4,8 +4,6 @@
 [![NuGet](https://img.shields.io/nuget/v/Yuniko.Software.Qwen3Tokenizer.svg)](https://www.nuget.org/packages/Yuniko.Software.Qwen3Tokenizer)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Yuniko.Software.Qwen3Tokenizer.svg)](https://www.nuget.org/packages/Yuniko.Software.Qwen3Tokenizer)
 
-> **Note**: This package is currently in preview as it depends on `Microsoft.ML.Tokenizers` (preview). It's ready for production use, but the preview tag will remain until dependencies stabilize.
-
 Native .NET tokenizer implementation for Qwen3 models. Lightweight byte-pair encoding with HuggingFace integration.
 
 ## Features
