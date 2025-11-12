@@ -32,8 +32,11 @@ Install-Package Yuniko.Software.Qwen3Tokenizer
 ```csharp
 using Yuniko.Software.Qwen3Tokenizer;
 
-// Load from HuggingFace model
-var tokenizer = await Qwen3Tokenizer.FromHuggingFaceAsync("Qwen/Qwen3-0.6B");
+// Load from HuggingFace model (specify if it's for an embedding model)
+var tokenizer = await Qwen3Tokenizer.FromHuggingFaceAsync(
+    "Qwen/Qwen3-0.6B", 
+    isForEmbeddingModel: false
+);
 
 // Encode text
 int[] tokenIds = tokenizer.Encode("Hello, world!");
@@ -50,7 +53,8 @@ Console.WriteLine($"Decoded: {decodedText}");
 ### Basic Tokenization
 
 ```csharp
-var tokenizer = Qwen3Tokenizer.FromHuggingFace("Qwen/Qwen3-0.6B");
+// For regular LLM models
+var tokenizer = Qwen3Tokenizer.FromHuggingFace("Qwen/Qwen3-0.6B", isForEmbeddingModel: false);
 
 // Encode text into token IDs
 int[] ids = tokenizer.Encode("The quick brown fox jumps over the lazy dog");
@@ -62,7 +66,26 @@ string text = tokenizer.Decode(ids);
 int tokenCount = tokenizer.CountTokens("Some text to count");
 ```
 
-### Working with Special Tokens
+### Working with Embedding Models
+
+```csharp
+// For embedding models - adds pad token at the end when addSpecialTokens=true
+var embeddingTokenizer = Qwen3Tokenizer.FromHuggingFace(
+    "Qwen/Qwen3-Embedding-0.6B", 
+    isForEmbeddingModel: true
+);
+
+// With special tokens (includes pad token at the end)
+int[] withSpecial = embeddingTokenizer.Encode("Your text here", addSpecialTokens: true);
+
+// Without special tokens
+int[] withoutSpecial = embeddingTokenizer.Encode("Your text here", addSpecialTokens: false);
+
+Console.WriteLine($"With special tokens: {withSpecial.Length} tokens");
+Console.WriteLine($"Without special tokens: {withoutSpecial.Length} tokens");
+```
+
+### Decoding with Special Tokens
 
 ```csharp
 // Encode text with special tokens
@@ -74,6 +97,9 @@ string withSpecial = tokenizer.Decode(tokens, skipSpecialTokens: false);
 
 // Decode with special tokens removed (default behavior)
 string withoutSpecial = tokenizer.Decode(tokens, skipSpecialTokens: true);
+
+Console.WriteLine($"With special tokens: {withSpecial}");
+Console.WriteLine($"Without special tokens: {withoutSpecial}");
 ```
 
 ### Detailed Encoding Information
@@ -93,7 +119,11 @@ for (int i = 0; i < result.Ids.Length; i++)
 
 ```csharp
 // Prepare inputs for ONNX Runtime inference
-var inputs = tokenizer.PrepareForOnnx("Your input text here", maxLength: 512);
+var inputs = tokenizer.PrepareForOnnx(
+    "Your input text here", 
+    addSpecialTokens: true, 
+    maxLength: 512
+);
 
 // Use with ONNX Runtime
 // Note: Some models (e.g., embedding models) may not require position_ids
@@ -108,7 +138,8 @@ long[] positionIds = inputs.PositionIds;     // Position indices
 // Load tokenizer from local vocabulary and merges files
 var tokenizer = Qwen3Tokenizer.FromFiles(
     vocabPath: "/path/to/vocab.json",
-    mergesPath: "/path/to/merges.txt"
+    mergesPath: "/path/to/merges.txt",
+    isForEmbeddingModel: false
 );
 ```
 
@@ -132,7 +163,7 @@ public class CustomFileProvider : ITokenizerFileProvider
 }
 
 // Use custom provider
-var tokenizer = Qwen3Tokenizer.FromProvider(new CustomFileProvider());
+var tokenizer = Qwen3Tokenizer.FromProvider(new CustomFileProvider(), isForEmbeddingModel: false);
 ```
 
 ### Accessing Vocabulary and Token Information
@@ -151,8 +182,9 @@ IReadOnlyDictionary<string, int> addedTokens = tokenizer.AddedTokens;
 IReadOnlySet<int> specialTokenIds = tokenizer.SpecialTokenIds;
 
 // Use predefined token constants
-Console.WriteLine($"EOS token: {Qwen3Tokens.ImEnd} (ID: {Qwen3Tokens.ImEndTokenId})");
+Console.WriteLine($"IM_END token: {Qwen3Tokens.ImEnd} (ID: {Qwen3Tokens.ImEndTokenId})");
 Console.WriteLine($"PAD token: {Qwen3Tokens.EndOfText} (ID: {Qwen3Tokens.EndOfTextTokenId})");
+Console.WriteLine($"IM_START token: {Qwen3Tokens.ImStart} (ID: {Qwen3Tokens.ImStartTokenId})");
 ```
 
 For more examples, see the [sample project](samples/Yuniko.Software.Qwen3Tokenizer.Sample).

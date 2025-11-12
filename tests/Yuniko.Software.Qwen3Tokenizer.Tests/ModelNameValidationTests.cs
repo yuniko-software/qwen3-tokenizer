@@ -11,7 +11,7 @@ public class ModelNameValidationTests
     [InlineData("custom-org/my-qwen3-model")]
     public void FromHuggingFace_ValidQwen3ModelName_DoesNotThrow(string modelName)
     {
-        var exception = Record.Exception(() => Qwen3Tokenizer.FromHuggingFace(modelName));
+        var exception = Record.Exception(() => Qwen3Tokenizer.FromHuggingFace(modelName, isForEmbeddingModel: false));
 
         Assert.True(exception is null or not ArgumentException,
             $"Should not throw ArgumentException for valid Qwen3 model name: {modelName}");
@@ -25,7 +25,7 @@ public class ModelNameValidationTests
     [InlineData("some-random-model")]
     public void FromHuggingFace_NonQwen3ModelName_ThrowsArgumentException(string modelName)
     {
-        var exception = Assert.Throws<ArgumentException>(() => Qwen3Tokenizer.FromHuggingFace(modelName));
+        var exception = Assert.Throws<ArgumentException>(() => Qwen3Tokenizer.FromHuggingFace(modelName, isForEmbeddingModel: false));
 
         Assert.Equal("modelName", exception.ParamName);
         Assert.Contains("qwen3", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -34,7 +34,7 @@ public class ModelNameValidationTests
     [Fact]
     public void FromHuggingFace_NullModelName_ThrowsArgumentException()
     {
-        var exception = Assert.Throws<ArgumentException>(() => Qwen3Tokenizer.FromHuggingFace(null!));
+        var exception = Assert.Throws<ArgumentException>(() => Qwen3Tokenizer.FromHuggingFace(null!, isForEmbeddingModel: false));
 
         Assert.Equal("modelName", exception.ParamName);
         Assert.Contains("cannot be null", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -43,7 +43,7 @@ public class ModelNameValidationTests
     [Fact]
     public void FromHuggingFace_EmptyModelName_ThrowsArgumentException()
     {
-        var exception = Assert.Throws<ArgumentException>(() => Qwen3Tokenizer.FromHuggingFace(""));
+        var exception = Assert.Throws<ArgumentException>(() => Qwen3Tokenizer.FromHuggingFace("", isForEmbeddingModel: false));
 
         Assert.Equal("modelName", exception.ParamName);
         Assert.Contains("cannot be null", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -52,7 +52,7 @@ public class ModelNameValidationTests
     [Fact]
     public void FromHuggingFace_WhitespaceModelName_ThrowsArgumentException()
     {
-        var exception = Assert.Throws<ArgumentException>(() => Qwen3Tokenizer.FromHuggingFace("   "));
+        var exception = Assert.Throws<ArgumentException>(() => Qwen3Tokenizer.FromHuggingFace("   ", isForEmbeddingModel: false));
 
         Assert.Equal("modelName", exception.ParamName);
         Assert.Contains("cannot be null", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -64,7 +64,7 @@ public class ModelNameValidationTests
     [InlineData("org/QwEn3-model")]
     public async Task FromHuggingFaceAsync_ValidQwen3ModelName_DoesNotThrow(string modelName)
     {
-        var exception = await Record.ExceptionAsync(async () => await Qwen3Tokenizer.FromHuggingFaceAsync(modelName));
+        var exception = await Record.ExceptionAsync(async () => await Qwen3Tokenizer.FromHuggingFaceAsync(modelName, isForEmbeddingModel: false));
 
         Assert.True(exception is null or not ArgumentException,
             $"Should not throw ArgumentException for valid Qwen3 model name: {modelName}");
@@ -75,7 +75,7 @@ public class ModelNameValidationTests
     [InlineData("mistralai/Mistral-7B")]
     public async Task FromHuggingFaceAsync_NonQwen3ModelName_ThrowsArgumentException(string modelName)
     {
-        var exception = await Assert.ThrowsAsync<ArgumentException>(async () => await Qwen3Tokenizer.FromHuggingFaceAsync(modelName));
+        var exception = await Assert.ThrowsAsync<ArgumentException>(async () => await Qwen3Tokenizer.FromHuggingFaceAsync(modelName, isForEmbeddingModel: false));
 
         Assert.Equal("modelName", exception.ParamName);
         Assert.Contains("qwen3", exception.Message, StringComparison.OrdinalIgnoreCase);
