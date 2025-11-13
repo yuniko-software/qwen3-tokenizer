@@ -6,7 +6,7 @@ public class OnnxPreparationTests
 
     public OnnxPreparationTests()
     {
-        _tokenizer = Qwen3Tokenizer.FromHuggingFace("Qwen/Qwen3-0.6B");
+        _tokenizer = Qwen3Tokenizer.FromHuggingFace("Qwen/Qwen3-0.6B", isForEmbeddingModel: false);
     }
 
     [Theory]
@@ -15,7 +15,7 @@ public class OnnxPreparationTests
     [InlineData("This is a longer sentence that will be truncated", 5)]
     public void PrepareForOnnx_ReturnsCorrectLength(string text, int maxLength)
     {
-        var result = _tokenizer.PrepareForOnnx(text, maxLength);
+        var result = _tokenizer.PrepareForOnnx(text, maxLength: maxLength);
 
         Assert.Equal(maxLength, result.InputIds.Length);
         Assert.Equal(maxLength, result.AttentionMask.Length);
@@ -29,9 +29,9 @@ public class OnnxPreparationTests
         const string text = "Hi";
         const int maxLength = 10;
 
-        var result = _tokenizer.PrepareForOnnx(text, maxLength);
+        var result = _tokenizer.PrepareForOnnx(text, maxLength: maxLength);
 
-        var tokenCount = _tokenizer.CountTokens(text, addEos: true);
+        var tokenCount = _tokenizer.CountTokens(text, addSpecialTokens: true);
 
         for (int i = 0; i < tokenCount; i++)
         {
@@ -50,7 +50,7 @@ public class OnnxPreparationTests
         const string text = "This is a very long sentence that will definitely exceed the maximum length limit";
         const int maxLength = 5;
 
-        var result = _tokenizer.PrepareForOnnx(text, maxLength);
+        var result = _tokenizer.PrepareForOnnx(text, maxLength: maxLength);
 
         Assert.Equal(maxLength, result.InputIds.Length);
         Assert.All(result.AttentionMask, mask => Assert.Equal(1L, mask));
@@ -68,8 +68,8 @@ public class OnnxPreparationTests
         const string text = "Hello world";
         const int maxLength = 10;
 
-        var result = _tokenizer.PrepareForOnnx(text, maxLength);
-        var tokenCount = _tokenizer.CountTokens(text, addEos: true);
+        var result = _tokenizer.PrepareForOnnx(text, maxLength: maxLength);
+        var tokenCount = _tokenizer.CountTokens(text, addSpecialTokens: true);
 
         // Position IDs should be sequential for real tokens
         for (int i = 0; i < tokenCount; i++)

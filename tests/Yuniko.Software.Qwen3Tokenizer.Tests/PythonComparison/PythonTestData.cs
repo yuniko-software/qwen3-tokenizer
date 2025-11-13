@@ -14,7 +14,7 @@ public record PythonGeneratedTestDataFile(
 public record PythonTestCase(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("input")] string Input,
-    [property: JsonPropertyName("add_eos")] bool AddEos,
+    [property: JsonPropertyName("add_special_tokens")] bool AddSpecialTokens,
     [property: JsonPropertyName("expected")] PythonExpectedResult Expected
 );
 
@@ -38,6 +38,7 @@ public static class PythonTestDataProvider
     [
         ("Qwen/Qwen3-0.6B", "TestData/test_data_qwen3_0.6b.json"),
         ("Qwen/Qwen3-Embedding-0.6B", "TestData/test_data_qwen3_embedding_0.6b.json"),
+        ("Qwen/Qwen3-Embedding-8B", "TestData/test_data_qwen3_embedding_8b.json"),
         ("Qwen/Qwen3-Next-80B-A3B-Instruct", "TestData/test_data_qwen3_next_80b_a3b_instruct.json"),
         ("Qwen/Qwen3-VL-30B-A3B-Instruct", "TestData/test_data_qwen3_vl_30b_a3b_instruct.json"),
         ("Qwen/Qwen3-Reranker-0.6B", "TestData/test_data_qwen3_reranker_0.6b.json"),
@@ -76,7 +77,8 @@ public static class PythonTestDataProvider
                 return cached;
             }
 
-            var tokenizer = Qwen3Tokenizer.FromHuggingFace(modelName);
+            bool isForEmbeddingModel = modelName.Contains("Embedding", StringComparison.OrdinalIgnoreCase);
+            var tokenizer = Qwen3Tokenizer.FromHuggingFace(modelName, isForEmbeddingModel);
             _tokenizerCache[modelName] = tokenizer;
             return tokenizer;
         }

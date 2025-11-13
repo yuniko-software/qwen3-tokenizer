@@ -35,7 +35,7 @@ public class CustomProviderTests : IDisposable
     {
         var provider = new TestFileProvider(_vocabPath, _mergesPath);
 
-        var tokenizer = Qwen3Tokenizer.FromProvider(provider);
+        var tokenizer = Qwen3Tokenizer.FromProvider(provider, isForEmbeddingModel: false);
 
         Assert.NotNull(tokenizer);
         Assert.True(tokenizer.VocabularySize > 0);
@@ -46,7 +46,7 @@ public class CustomProviderTests : IDisposable
     {
         var provider = new TestFileProvider(_vocabPath, _mergesPath);
 
-        var tokenizer = await Qwen3Tokenizer.FromProviderAsync(provider);
+        var tokenizer = await Qwen3Tokenizer.FromProviderAsync(provider, isForEmbeddingModel: false);
 
         Assert.NotNull(tokenizer);
         Assert.True(tokenizer.VocabularySize > 0);
@@ -58,10 +58,10 @@ public class CustomProviderTests : IDisposable
         var provider = new TestFileProvider(_vocabPath, _mergesPath);
         var options = Qwen3TokenizerOptions.Default;
 
-        var tokenizer = Qwen3Tokenizer.FromProvider(provider, options);
+        var tokenizer = Qwen3Tokenizer.FromProvider(provider, isForEmbeddingModel: false, options);
 
         Assert.NotNull(tokenizer);
-        Assert.Equal(Qwen3Tokens.ImEndTokenId, options.EosTokenId);
+        Assert.Equal(Qwen3Tokens.EndOfTextTokenId, options.PadTokenId);
     }
 
     [Fact]
@@ -70,17 +70,17 @@ public class CustomProviderTests : IDisposable
         var provider = new TestFileProvider(_vocabPath, _mergesPath);
         var options = Qwen3TokenizerOptions.Default;
 
-        var tokenizer = await Qwen3Tokenizer.FromProviderAsync(provider, options);
+        var tokenizer = await Qwen3Tokenizer.FromProviderAsync(provider, isForEmbeddingModel: false, options);
 
         Assert.NotNull(tokenizer);
-        Assert.Equal(Qwen3Tokens.ImEndTokenId, options.EosTokenId);
+        Assert.Equal(Qwen3Tokens.EndOfTextTokenId, options.PadTokenId);
     }
 
     [Fact]
     public void FromProvider_TokenizerFunctionsCorrectly()
     {
         var provider = new TestFileProvider(_vocabPath, _mergesPath);
-        var tokenizer = Qwen3Tokenizer.FromProvider(provider);
+        var tokenizer = Qwen3Tokenizer.FromProvider(provider, isForEmbeddingModel: false);
 
         const string text = "Hello world";
         var tokens = tokenizer.Encode(text);
@@ -95,7 +95,7 @@ public class CustomProviderTests : IDisposable
     public async Task FromProviderAsync_TokenizerFunctionsCorrectly()
     {
         var provider = new TestFileProvider(_vocabPath, _mergesPath);
-        var tokenizer = await Qwen3Tokenizer.FromProviderAsync(provider);
+        var tokenizer = await Qwen3Tokenizer.FromProviderAsync(provider, isForEmbeddingModel: false);
 
         const string text = "Hello world";
         var tokens = tokenizer.Encode(text);
@@ -111,7 +111,7 @@ public class CustomProviderTests : IDisposable
     {
         var provider = new TestFileProvider(_vocabPath, _mergesPath);
 
-        Qwen3Tokenizer.FromProvider(provider);
+        Qwen3Tokenizer.FromProvider(provider, isForEmbeddingModel: false);
 
         Assert.True(provider.GetFilesCalled);
     }
@@ -121,7 +121,7 @@ public class CustomProviderTests : IDisposable
     {
         var provider = new TestFileProvider(_vocabPath, _mergesPath);
 
-        await Qwen3Tokenizer.FromProviderAsync(provider);
+        await Qwen3Tokenizer.FromProviderAsync(provider, isForEmbeddingModel: false);
 
         Assert.True(provider.GetFilesAsyncCalled);
     }
@@ -134,7 +134,7 @@ public class CustomProviderTests : IDisposable
         await cts.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            async () => await Qwen3Tokenizer.FromProviderAsync(provider, cancellationToken: cts.Token));
+            async () => await Qwen3Tokenizer.FromProviderAsync(provider, isForEmbeddingModel: false, cancellationToken: cts.Token));
     }
 
     private class TestFileProvider : ITokenizerFileProvider

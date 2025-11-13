@@ -8,7 +8,7 @@ Console.WriteLine("=== Qwen3 Tokenizer Sample ===\n");
 Console.WriteLine("1. Loading Tokenizer");
 Console.WriteLine("-------------------");
 
-var tokenizer = Qwen3Tokenizer.FromHuggingFace("Qwen/Qwen3-0.6B");
+var tokenizer = Qwen3Tokenizer.FromHuggingFace("Qwen/Qwen3-0.6B", isForEmbeddingModel: false);
 Console.WriteLine("Loaded tokenizer for Qwen/Qwen3-0.6B");
 Console.WriteLine($"Vocabulary size: {tokenizer.VocabularySize:N0}");
 Console.WriteLine($"Added tokens: {tokenizer.AddedTokens.Count}");
@@ -95,24 +95,43 @@ Console.WriteLine($"Position IDs (first 10): [{string.Join(", ", onnxInputs.Posi
 Console.WriteLine("Note: Some models (e.g., embedding models) may not require position_ids\n");
 
 // ============================================================================
-// 6. Encoding with EOS Token
+// 6. Encoding with Special Tokens
 // ============================================================================
-Console.WriteLine("6. Encoding with EOS Token");
+Console.WriteLine("6. Encoding with Special Tokens");
+Console.WriteLine("--------------------------------");
+
+string specialText = "This is a sentence.";
+int[] withoutSpecialTokens = tokenizer.Encode(specialText, addSpecialTokens: false);
+int[] withSpecialTokens = tokenizer.Encode(specialText, addSpecialTokens: true);
+
+Console.WriteLine($"Text: \"{specialText}\"");
+Console.WriteLine($"Without special tokens: [{string.Join(", ", withoutSpecialTokens)}] (length: {withoutSpecialTokens.Length})");
+Console.WriteLine($"With special tokens: [{string.Join(", ", withSpecialTokens)}] (length: {withSpecialTokens.Length})");
+Console.WriteLine("Note: For non-embedding models, special tokens don't add extra tokens by default\n");
+
+// ============================================================================
+// 7. Embedding Model Example
+// ============================================================================
+Console.WriteLine("7. Embedding Model Example");
 Console.WriteLine("--------------------------");
 
-string eosText = "This is a sentence.";
-int[] withoutEos = tokenizer.Encode(eosText, addEos: false);
-int[] withEos = tokenizer.Encode(eosText, addEos: true);
+var embeddingTokenizer = Qwen3Tokenizer.FromHuggingFace("Qwen/Qwen3-Embedding-0.6B", isForEmbeddingModel: true);
+Console.WriteLine("Loaded embedding tokenizer for Qwen/Qwen3-Embedding-0.6B");
 
-Console.WriteLine($"Text: \"{eosText}\"");
-Console.WriteLine($"Without EOS: [{string.Join(", ", withoutEos)}] (length: {withoutEos.Length})");
-Console.WriteLine($"With EOS: [{string.Join(", ", withEos)}] (length: {withEos.Length})");
-Console.WriteLine($"EOS token ID: {Qwen3Tokens.ImEndTokenId}\n");
+string embText = "This is a test sentence for embeddings.";
+int[] embWithoutSpecial = embeddingTokenizer.Encode(embText, addSpecialTokens: false);
+int[] embWithSpecial = embeddingTokenizer.Encode(embText, addSpecialTokens: true);
+
+Console.WriteLine($"Text: \"{embText}\"");
+Console.WriteLine($"Without special tokens: [{string.Join(", ", embWithoutSpecial)}] (length: {embWithoutSpecial.Length})");
+Console.WriteLine($"With special tokens: [{string.Join(", ", embWithSpecial)}] (length: {embWithSpecial.Length})");
+Console.WriteLine("Note: Embedding models add a pad token at the end when addSpecialTokens=true");
+Console.WriteLine($"Pad token ID: {Qwen3Tokens.EndOfTextTokenId}\n");
 
 // ============================================================================
-// 7. Multilingual and Emoji Support
+// 8. Multilingual and Emoji Support
 // ============================================================================
-Console.WriteLine("7. Multilingual and Emoji Support");
+Console.WriteLine("8. Multilingual and Emoji Support");
 Console.WriteLine("---------------------------------");
 
 string[] examples =
