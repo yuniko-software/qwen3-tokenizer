@@ -298,43 +298,19 @@ public sealed class Qwen3Tokenizer
     public OnnxInputs PrepareForOnnx(string text, bool addSpecialTokens = true)
     {
         var ids = Encode(text, addSpecialTokens);
-        var (inputIds, attentionMask) = PrepareInputArrays(ids);
-        var positionIds = CreatePositionIds(attentionMask);
-        return new OnnxInputs(inputIds, attentionMask, positionIds, SequenceLength: ids.Length);
-    }
 
-    private (long[] InputIds, long[] AttentionMask) PrepareInputArrays(int[] ids)
-    {
         var inputIds = new long[ids.Length];
         var attentionMask = new long[ids.Length];
+        var positionIds = new long[ids.Length];
 
         for (int i = 0; i < ids.Length; i++)
         {
             inputIds[i] = ids[i];
             attentionMask[i] = 1;
+            positionIds[i] = i;
         }
 
-        return (inputIds, attentionMask);
-    }
-
-    private static long[] CreatePositionIds(long[] attentionMask)
-    {
-        var positionIds = new long[attentionMask.Length];
-        long position = 0;
-
-        for (int i = 0; i < attentionMask.Length; i++)
-        {
-            if (attentionMask[i] == 1)
-            {
-                positionIds[i] = position++;
-            }
-            else
-            {
-                positionIds[i] = 0;
-            }
-        }
-
-        return positionIds;
+        return new OnnxInputs(inputIds, attentionMask, positionIds, SequenceLength: ids.Length);
     }
 
     /// <summary>
