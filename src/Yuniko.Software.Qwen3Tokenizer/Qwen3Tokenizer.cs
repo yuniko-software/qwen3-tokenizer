@@ -288,51 +288,35 @@ public sealed class Qwen3Tokenizer
     /// </summary>
     /// <param name="text">Input text to encode.</param>
     /// <param name="addSpecialTokens">Whether to add special tokens. For embedding models, this adds a pad token at the end. Default is true to match HuggingFace behavior.</param>
-    /// <param name="maxLength">Maximum sequence length (will pad or truncate). Default is 512.</param>
     /// <returns>ONNX inputs containing input_ids, attention_mask, and position_ids.</returns>
     /// <remarks>
-    /// Returns 1D arrays for single-text inference.
+    /// Returns 1D arrays with dynamic length (no padding) for single-text inference.
     /// Position IDs are calculated based on the attention mask (cumulative sum of non-padding positions).
     /// Some models (e.g., embedding models) may not require position_ids.
-    /// For batch inference, call this method for each text and construct 2D arrays manually.
+    /// For batch inference, call this method for each text and construct 2D arrays manually with appropriate padding.
     /// </remarks>
-    public OnnxInputs PrepareForOnnx(string text, bool addSpecialTokens = true, int maxLength = 512)
-    {
-        var (inputIds, attentionMask) = PrepareInputArrays(text, addSpecialTokens, maxLength);
-        var positionIds = CreatePositionIds(attentionMask);
-        return new OnnxInputs(inputIds, attentionMask, positionIds, SequenceLength: maxLength);
-    }
-
-    /// <summary>
-    /// Common logic for preparing input arrays with padding and truncation.
-    /// </summary>
-    private (long[] InputIds, long[] AttentionMask) PrepareInputArrays(string text, bool addSpecialTokens, int maxLength)
+    public OnnxInputs PrepareForOnnx(string text, bool addSpecialTokens = true)
     {
         var ids = Encode(text, addSpecialTokens);
+        var (inputIds, attentionMask) = PrepareInputArrays(ids);
+        var positionIds = CreatePositionIds(attentionMask);
+        return new OnnxInputs(inputIds, attentionMask, positionIds, SequenceLength: ids.Length);
+    }
 
-        var inputIds = new long[maxLength];
-        var attentionMask = new long[maxLength];
+    private (long[] InputIds, long[] AttentionMask) PrepareInputArrays(int[] ids)
+    {
+        var inputIds = new long[ids.Length];
+        var attentionMask = new long[ids.Length];
 
-        int actualLength = Math.Min(ids.Length, maxLength);
-
-        for (int i = 0; i < actualLength; i++)
+        for (int i = 0; i < ids.Length; i++)
         {
             inputIds[i] = ids[i];
             attentionMask[i] = 1;
         }
 
-        for (int i = actualLength; i < maxLength; i++)
-        {
-            inputIds[i] = _padTokenId;
-            attentionMask[i] = 0;
-        }
-
         return (inputIds, attentionMask);
     }
 
-    /// <summary>
-    /// Creates position IDs based on attention mask (cumulative count of non-padding positions).
-    /// </summary>
     private static long[] CreatePositionIds(long[] attentionMask)
     {
         var positionIds = new long[attentionMask.Length];
@@ -346,7 +330,6 @@ public sealed class Qwen3Tokenizer
             }
             else
             {
-                // For padding tokens, keep position at 0 (or could use last valid position)
                 positionIds[i] = 0;
             }
         }
