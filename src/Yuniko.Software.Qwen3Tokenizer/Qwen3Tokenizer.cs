@@ -291,7 +291,7 @@ public sealed class Qwen3Tokenizer
     /// <returns>ONNX inputs containing input_ids, attention_mask, and position_ids.</returns>
     /// <remarks>
     /// Returns 1D arrays with dynamic length (no padding) for single-text inference.
-    /// Position IDs are calculated based on the attention mask (cumulative sum of non-padding positions).
+    /// Position IDs are sequential (0, 1, 2, ...) for each token in the sequence.
     /// Some models (e.g., embedding models) may not require position_ids.
     /// For batch inference, call this method for each text and construct 2D arrays manually with appropriate padding.
     /// </remarks>
